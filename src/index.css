@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Kid-friendly Design System - All colors in HSL */
+@layer base {
+  :root {
+    /* Primary Brand Colors */
+    --primary: 260 100% 65%;           /* Playful Purple */
+    --primary-foreground: 0 0% 100%;   
+    --primary-glow: 280 100% 80%;      /* Light Purple Glow */
+    
+    /* Fun Secondary Colors */
+    --secondary: 45 100% 55%;          /* Sunny Yellow */
+    --secondary-foreground: 25 25% 15%;
+    --accent: 160 100% 50%;            /* Fresh Green */
+    --accent-foreground: 0 0% 100%;
+    
+    /* Warm Game Colors */
+    --game-riddle: 15 100% 60%;        /* Orange for Riddles */
+    --game-story: 210 100% 60%;        /* Blue for Stories */
+    --game-success: 120 100% 40%;      /* Success Green */
+    --game-warning: 35 100% 50%;       /* Warning Orange */
+    
+    /* Background & Layout */
+    --background: 220 100% 97%;        /* Very Light Blue */
+    --foreground: 230 20% 15%;         /* Dark Blue Text */
+    --card: 0 0% 100%;                 /* Pure White Cards */
+    --card-foreground: 230 20% 15%;
+    
+    /* Interactive Elements */
+    --muted: 220 50% 90%;              /* Light Blue Muted */
+    --muted-foreground: 220 15% 45%;
+    --border: 220 30% 85%;             /* Soft Blue Border */
+    --input: 220 30% 90%;
+    --ring: 260 100% 65%;              /* Focus Ring = Primary */
+    
+    /* Notification Colors */
+    --destructive: 0 85% 60%;          /* Red for errors */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 20% 15%;
+    
+    /* Custom Design Tokens */
+    --radius: 1rem;                    /* More rounded for kids */
+    
+    /* Beautiful Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-game: linear-gradient(135deg, hsl(var(--game-riddle)), hsl(var(--secondary)));
+    --gradient-story: linear-gradient(135deg, hsl(var(--game-story)), hsl(var(--accent)));
+    --gradient-bg: linear-gradient(145deg, hsl(220 100% 97%), hsl(240 100% 99%));
+    
+    /* Fun Shadows */
+    --shadow-soft: 0 4px 20px hsl(260 100% 65% / 0.15);
+    --shadow-game: 0 8px 25px hsl(var(--game-riddle) / 0.3);
+    --shadow-story: 0 8px 25px hsl(var(--game-story) / 0.3);
+    --shadow-float: 0 10px 30px hsl(260 100% 65% / 0.2);
+    
+    /* Smooth Transitions */
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    --background: 230 25% 8%;
+    --foreground: 220 100% 95%;
+    --card: 230 20% 12%;
+    --card-foreground: 220 100% 95%;
+    --popover: 230 20% 12%;
+    --popover-foreground: 220 100% 95%;
+    --primary: 260 100% 70%;
+    --primary-foreground: 230 25% 8%;
+    --secondary: 45 80% 60%;
+    --secondary-foreground: 230 25% 8%;
+    --muted: 230 20% 15%;
+    --muted-foreground: 220 50% 70%;
+    --accent: 160 80% 55%;
+    --accent-foreground: 230 25% 8%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 220 100% 95%;
+    --border: 230 20% 20%;
+    --input: 230 20% 15%;
+    --ring: 260 100% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-comic;
+    background: hsl(var(--background));
+    background-image: var(--gradient-bg);
+    min-height: 100vh;
+  }
+  
+  /* Fun animations for kids */
+  .bounce-in {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .wiggle {
+    animation: wiggle 0.5s ease-in-out;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3) translateY(20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) translateY(-10px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}

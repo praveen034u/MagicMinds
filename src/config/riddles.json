@@ -1,0 +1,559 @@
+
+{
+  "Zoo Animals": {
+    "easy": [
+      {
+        "id": "zoo_easy_1",
+        "question": "I'm tall with a long neck, I eat leaves from trees. I have spots all over me. What am I?",
+        "options": ["Elephant", "Giraffe", "Lion", "Monkey"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I'm the tallest animal in the zoo!"
+      },
+      {
+        "id": "zoo_easy_2",
+        "question": "I have a trunk and I'm really big. I love to splash in the water. What am I?",
+        "options": ["Hippo", "Rhino", "Elephant", "Bear"],
+        "correctAnswer": 2,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I use my nose to pick things up!"
+      },
+      {
+        "id": "zoo_easy_3",
+        "question": "I'm the king of the jungle with a big mane. I roar really loud! What am I?",
+        "options": ["Tiger", "Lion", "Leopard", "Cheetah"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I have a fluffy mane around my head!"
+      },
+      {
+        "id": "zoo_easy_4",
+        "question": "I swing from branch to branch and I love bananas. What am I?",
+        "options": ["Monkey", "Sloth", "Bird", "Squirrel"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I can hang by my tail!"
+      },
+      {
+        "id": "zoo_easy_5",
+        "question": "I carry my baby in a pouch and hop around. Who am I?",
+        "options": ["Kangaroo", "Koala", "Wallaby", "Panda"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I am famous in Australia and I hop."
+      },
+      {
+        "id": "zoo_easy_6",
+        "question": "I have black and white fur and I love bamboo. What am I?",
+        "options": ["Zebra", "Penguin", "Panda", "Skunk"],
+        "correctAnswer": 2,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I'm known for rolling and cuddly looks."
+      },
+      {
+        "id": "zoo_easy_7",
+        "question": "I have a long neck and humps on my back and can live in the desert. What am I?",
+        "options": ["Horse", "Camel", "Llama", "Donkey"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I store fat in my humps."
+      },
+      {
+        "id": "zoo_easy_8",
+        "question": "I hop and have big back legs and long ears. I love carrots. Who am I?",
+        "options": ["Rabbit", "Frog", "Kangaroo", "Mouse"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I have soft fur and a twitchy nose."
+      },
+      {
+        "id": "zoo_easy_9",
+        "question": "I am small, colorful, and can fly. I love nectar from flowers. What am I?",
+        "options": ["Butterfly", "Bird", "Bee", "Bat"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I start as a caterpillar."
+      },
+      {
+        "id": "zoo_easy_10",
+        "question": "I have a big shell and move slowly. People sometimes carry me. What am I?",
+        "options": ["Turtle", "Hedgehog", "Snail", "Tortoise"],
+        "correctAnswer": 3,
+        "theme": "Zoo Animals",
+        "difficulty": "easy",
+        "hint": "I can live a very long time."
+      }
+    ],
+    "medium": [
+      {
+        "id": "zoo_med_1",
+        "question": "I have black and white stripes to hide in the grass. Who am I?",
+        "options": ["Horse", "Zebra", "Cow", "Donkey"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "Each of us has a unique stripe pattern."
+      },
+      {
+        "id": "zoo_med_2",
+        "question": "I'm a big spotted cat that climbs trees and rests on branches. What am I?",
+        "options": ["Lion", "Leopard", "Tiger", "Cheetah"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I often have rosettes on my coat."
+      },
+      {
+        "id": "zoo_med_3",
+        "question": "I have a long, sticky tongue that I use to catch ants and termites. What am I?",
+        "options": ["Anteater", "Armadillo", "Porcupine", "Otter"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I have a long snout and love insects."
+      },
+      {
+        "id": "zoo_med_4",
+        "question": "I can sleep while hanging upside down in trees and move very slowly. What am I?",
+        "options": ["Sloth", "Koala", "Lemur", "Sugar Glider"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I eat leaves and am very sleepy."
+      },
+      {
+        "id": "zoo_med_5",
+        "question": "I have a long trunk and big tusks and am known for my memory. What am I?",
+        "options": ["Walrus", "Elephant", "Rhinoceros", "Hippo"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I have large ears and live in family herds."
+      },
+      {
+        "id": "zoo_med_6",
+        "question": "I'm fast, can run up to 70 mph and have black tear marks on my face. Who am I?",
+        "options": ["Leopard", "Tiger", "Cheetah", "Cougar"],
+        "correctAnswer": 2,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I'm the fastest land animal."
+      },
+      {
+        "id": "zoo_med_7",
+        "question": "I burrow underground and roll into a ball when scared. What am I?",
+        "options": ["Armadillo", "Hedgehog", "Porcupine", "Mole"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I have armor-like plates."
+      },
+      {
+        "id": "zoo_med_8",
+        "question": "I have quills for protection and roll into a spiky ball when threatened. Who am I?",
+        "options": ["Porcupine", "Hedgehog", "Echidna", "Armadillo"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I'm small and found in gardens and forests."
+      },
+      {
+        "id": "zoo_med_9",
+        "question": "I build dams in rivers and have a flat tail and big teeth. What am I?",
+        "options": ["Beaver", "Muskrat", "Otter", "Platypus"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "My teeth never stop growing."
+      },
+      {
+        "id": "zoo_med_10",
+        "question": "I have a long sticky tongue, sharp claws, and sleep a lot during cold months. Who am I?",
+        "options": ["Otter", "Bear", "Panda", "Koala"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "medium",
+        "hint": "I hibernate in winter."
+      }
+    ],
+    "hard": [
+      {
+        "id": "zoo_hard_1",
+        "question": "I have branched antlers and I run in herds through forests and fields. What am I?",
+        "options": ["Deer", "Moose", "Elk", "Antelope"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "Many hunters and hikers see me in the wild."
+      },
+      {
+        "id": "zoo_hard_2",
+        "question": "I'm covered in armor plates and can roll into a ball; I eat ants and termites. What am I?",
+        "options": ["Armadillo", "Anteater", "Pangolin", "Porcupine"],
+        "correctAnswer": 2,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I'm the only mammal covered in large scales."
+      },
+      {
+        "id": "zoo_hard_3",
+        "question": "I am a large marsupial with thick fur and a duckbill; I also lay eggs. What am I?",
+        "options": ["Platypus", "Echidna", "Kangaroo", "Koala"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I live in Australia and am very unique."
+      },
+      {
+        "id": "zoo_hard_4",
+        "question": "I have a long tongue, sticky saliva, and a protective armored shell; sometimes called a scaly anteater. What am I?",
+        "options": ["Pangolin", "Armadillo", "Anteater", "Sloth"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "My scales are illegally traded; I'm endangered."
+      },
+      {
+        "id": "zoo_hard_5",
+        "question": "I am the largest living rodent and I love water. Who am I?",
+        "options": ["Beaver", "Capybara", "Porcupine", "Muskrat"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I live in groups near rivers in South America."
+      },
+      {
+        "id": "zoo_hard_6",
+        "question": "I am a nocturnal primate with huge eyes and a long tail, found on Madagascar. What am I?",
+        "options": ["Lemur", "Tarsier", "Bushbaby", "Galago"],
+        "correctAnswer": 0,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I hop between trees and make loud calls."
+      },
+      {
+        "id": "zoo_hard_7",
+        "question": "I look like a horse with stripes on my legs and live in Africa; I am adapted to high altitudes. Who am I?",
+        "options": ["Zebra", "Okapi", "Gazelle", "Kudu"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I have a velvety tongue and live in rainforests."
+      },
+      {
+        "id": "zoo_hard_8",
+        "question": "I'm a large bear-like animal that eats mainly bamboo and belongs to the giant panda family. What am I?",
+        "options": ["Red Panda", "Panda Bear", "Spectacled Bear", "Sloth Bear"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I spend most of my day eating bamboo."
+      },
+      {
+        "id": "zoo_hard_9",
+        "question": "I have a leathery snout, live mostly in deserts, and can close my nostrils to keep out sand. Who am I?",
+        "options": ["Rhinoceros", "Tapir", "Camel", "Gerenuk"],
+        "correctAnswer": 2,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I store fat in humps to survive dry seasons."
+      },
+      {
+        "id": "zoo_hard_10",
+        "question": "I am a solitary big cat with striped fur adapted for life in dense forests and marshes. Who am I?",
+        "options": ["Jaguar", "Tiger", "Leopard", "Cougar"],
+        "correctAnswer": 1,
+        "theme": "Zoo Animals",
+        "difficulty": "hard",
+        "hint": "I'm the largest of the big cats."
+      }
+    ]
+  },
+  "Ocean Friends": {
+    "easy": [
+      {
+        "id": "ocean_easy_1",
+        "question": "I'm the biggest animal in the ocean. I sing beautiful songs. What am I?",
+        "options": ["Shark", "Dolphin", "Whale", "Octopus"],
+        "correctAnswer": 2,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "I'm a huge mammal, not a fish."
+      },
+      {
+        "id": "ocean_easy_2",
+        "question": "I have eight arms and can change colors. Who am I?",
+        "options": ["Jellyfish", "Octopus", "Squid", "Starfish"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "I squeeze through small spaces and am very smart."
+      },
+      {
+        "id": "ocean_easy_3",
+        "question": "I have sharp teeth and must keep swimming to breathe. Who am I?",
+        "options": ["Shark", "Seal", "Tuna", "Whale"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "Some of us are apex predators with powerful jaws."
+      },
+      {
+        "id": "ocean_easy_4",
+        "question": "I walk sideways and have a hard shell. What am I?",
+        "options": ["Crab", "Lobster", "Shrimp", "Turtle"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "You might find me scuttling on the beach."
+      },
+      {
+        "id": "ocean_easy_5",
+        "question": "I look like a tiny horse and the males carry the babies. Who am I?",
+        "options": ["Seahorse", "SeaLion", "Manatee", "Jellyfish"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "I have a curled tail and swim upright."
+      },
+      {
+        "id": "ocean_easy_6",
+        "question": "I have a shell on my back and can live in water for a long time. What am I?",
+        "options": ["Turtle", "Crab", "Frog", "Seal"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "Some of us lay eggs on beaches."
+      },
+      {
+        "id": "ocean_easy_7",
+        "question": "I jump above the water and am playful; I'm very smart and often seen near boats. Who am I?",
+        "options": ["Seal", "Dolphin", "Whale", "Porpoise"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "I have a friendly smile and often do flips."
+      },
+      {
+        "id": "ocean_easy_8",
+        "question": "I glow from within at night in the sea; tiny organisms cause the glow. What is this called?",
+        "options": ["Coral", "Bioluminescence", "Algae Bloom", "Tide Pools"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "Tiny plankton create light when disturbed."
+      },
+      {
+        "id": "ocean_easy_9",
+        "question": "I have a hard beak and many tentacles; some of my relatives squirt ink. What am I?",
+        "options": ["Octopus", "Jellyfish", "Coral", "Sea Urchin"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "I can change color and hide."
+      },
+      {
+        "id": "ocean_easy_10",
+        "question": "I'm a slow-moving sea mammal that eats sea grass and is also called a sea cow. What am I?",
+        "options": ["Manatee", "Seal", "Walrus", "Dugong"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "easy",
+        "hint": "I live in warm shallow waters and graze on plants."
+      }
+    ],
+    "medium": [
+      {
+        "id": "ocean_med_1",
+        "question": "I'm a giant flat fish that looks like I'm flying underwater. What am I?",
+        "options": ["Stingray", "Manta Ray", "Skate", "Flounder"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I have wide 'wings' and filter-feed in warm waters."
+      },
+      {
+        "id": "ocean_med_2",
+        "question": "I have whiskers and big tusks, I live in cold seas and love to haul out on ice. Who am I?",
+        "options": ["Seal", "Walrus", "Sea Otter", "Polar Bear"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I have long tusks and live in Arctic regions."
+      },
+      {
+        "id": "ocean_med_3",
+        "question": "I filter tiny plankton with my huge baleen plates and can be enormous. What am I?",
+        "options": ["Orca", "Blue Whale", "Great White Shark", "Dolphin"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I'm one of the largest animals that has ever lived."
+      },
+      {
+        "id": "ocean_med_4",
+        "question": "I make a hard calcium house and have tiny colorful animals living inside me. What am I?",
+        "options": ["Coral", "Sea Anemone", "Sponge", "Kelp"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "Coral reefs are busy underwater cities."
+      },
+      {
+        "id": "ocean_med_5",
+        "question": "I use a hard shell for protection and live on reefs; some of my kind have a single large claw. Who am I?",
+        "options": ["Lobster", "Crab", "Hermit Crab", "Shrimp"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "Fishers catch me for seafood."
+      },
+      {
+        "id": "ocean_med_6",
+        "question": "I am known for my intelligence, complex social groups, and use of tools. I have a beak and live in coastal waters. What am I?",
+        "options": ["Dolphin", "Octopus", "Sea Otter", "Seal"],
+        "correctAnswer": 2,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I use rocks to open shells."
+      },
+      {
+        "id": "ocean_med_7",
+        "question": "I am a fast predator with a sleek body and a tail fin shaped like a crescent. What am I?",
+        "options": ["Tuna", "Shark", "Marlin", "Swordfish"],
+        "correctAnswer": 2,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I'm known for long bills and high speed leaps."
+      },
+      {
+        "id": "ocean_med_8",
+        "question": "I tuck my young into a pouch and live mostly on land near the ocean. Who am I?",
+        "options": ["Sea Otter", "Seal", "Sea Lion", "Wallaby"],
+        "correctAnswer": 2,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I can balance on my front flippers and clap loudly."
+      },
+      {
+        "id": "ocean_med_9",
+        "question": "I am a tiny crustacean that glows and forms part of the ocean food chain; many sea creatures eat me. Who am I?",
+        "options": ["Plankton", "Krill", "Copepod", "Shrimp"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "Huge whales feed on us by the bucketful."
+      },
+      {
+        "id": "ocean_med_10",
+        "question": "I live in shallow tidal areas and can regrow lost arms; I radiate from a central disc. What am I?",
+        "options": ["Sea Cucumber", "Sea Urchin", "Starfish", "Sand Dollar"],
+        "correctAnswer": 2,
+        "theme": "Ocean Friends",
+        "difficulty": "medium",
+        "hint": "I move with tube feet and can pry open shells."
+      }
+    ],
+    "hard": [
+      {
+        "id": "ocean_hard_1",
+        "question": "At night I can light up the waves with my glow; tiny single-celled organisms make it happen. What are they?",
+        "options": ["Seagrass", "Plankton", "Coral", "Algae Beds"],
+        "correctAnswer": 1,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "Bioluminescent microorganisms create the glow."
+      },
+      {
+        "id": "ocean_hard_2",
+        "question": "I am a toothed whale known for complex vocalizations and coordinated hunting; my black-and-white coloring is famous. What am I?",
+        "options": ["Orca (Killer Whale)", "Beluga", "Narwhal", "Sperm Whale"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "I hunt in pods and have a dorsal fin."
+      },
+      {
+        "id": "ocean_hard_3",
+        "question": "I am an ancient armored fish with a flattened body, living on the sea floor and sometimes poisonous. Who am I?",
+        "options": ["Stingray", "Skate", "Placoderm", "Lionfish"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "I have a venomous barb on my tail."
+      },
+      {
+        "id": "ocean_hard_4",
+        "question": "I have a long tusk that is actually an elongated tooth and I live in Arctic waters. What am I?",
+        "options": ["Narwhal", "Walrus", "Beluga", "Sei Whale"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "My tusk can grow many feet long."
+      },
+      {
+        "id": "ocean_hard_5",
+        "question": "I build intricate calcium carbonate structures that form tropical underwater mountains and provide habitat for many species. What am I?",
+        "options": ["Coral Reef", "Kelp Forest", "Seagrass Meadow", "Mangrove"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "Tiny polyps work together to create me."
+      },
+      {
+        "id": "ocean_hard_6",
+        "question": "I am a mollusk with a chambered shell used historically for measuring and as an instrument; I can jet-propel myself. What am I?",
+        "options": ["Nautilus", "Cuttlefish", "Squid", "Octopus"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "My shell has many chambers and shows a spiral."
+      },
+      {
+        "id": "ocean_hard_7",
+        "question": "I am a cold-water baleen whale that swims in huge groups and was once hunted for oil; I'm silver-gray and fast. Who am I?",
+        "options": ["Blue Whale", "Humpback Whale", "Sei Whale", "Fin Whale"],
+        "correctAnswer": 3,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "I have a distinctive ridge on my back behind the blowholes."
+      },
+      {
+        "id": "ocean_hard_8",
+        "question": "I am a slow-moving echinoderm that feeds on dead and decaying matter on the seafloor. What am I?",
+        "options": ["Sea Cucumber", "Sea Star", "Sea Urchin", "Sea Anemone"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "I help recycle nutrients on the ocean floor."
+      },
+      {
+        "id": "ocean_hard_9",
+        "question": "I am a fish famous for my bright warning colors and venomous spines; I invaded many parts of the Atlantic in recent decades. Who am I?",
+        "options": ["Lionfish", "Moray Eel", "Pufferfish", "Triggerfish"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "My sting can be painful to humans."
+      },
+      {
+        "id": "ocean_hard_10",
+        "question": "I dwell in the deep sea, produce light with special organs, and lure prey with a glowing lure on my head. What am I?",
+        "options": ["Anglerfish", "Viperfish", "Gulper Eel", "Lanternfish"],
+        "correctAnswer": 0,
+        "theme": "Ocean Friends",
+        "difficulty": "hard",
+        "hint": "My glowing lure attracts curious prey in darkness."
+      }
+    ]
+  }
+}

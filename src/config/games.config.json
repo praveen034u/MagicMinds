@@ -1,0 +1,44 @@
+[
+  {
+    "id": "riddle",
+    "title": "Riddle Time! 🤔",
+    "icon": "❓",
+    "enabled": true,
+    "difficulties": ["easy", "medium", "hard"],
+    "dataSource": "local:riddles.json",
+    "scoring": {
+      "correct": 1,
+      "streakBonus": 1
+    },
+    "description": "Solve fun riddles and brain teasers! Pick your favorite theme and test your thinking skills.",
+    "theme": "Zoo Animals"
+  },
+  {
+    "id": "vocabulary",
+    "title": "Word Builder 📚",
+    "icon": "📝",
+    "enabled": false,
+    "difficulties": ["beginner", "intermediate", "advanced"],
+    "dataSource": "local:vocabulary.json",
+    "scoring": {
+      "correct": 2,
+      "streakBonus": 1
+    },
+    "description": "Build your vocabulary with fun word games and spelling challenges!",
+    "theme": "Learning Words"
+  },
+  {
+    "id": "sequence",
+    "title": "Story Sequencing 📖",
+    "icon": "🔄",
+    "enabled": false,
+    "difficulties": ["simple", "medium", "complex"],
+    "dataSource": "local:sequences.json",
+    "scoring": {
+      "correct": 3,
+      "streakBonus": 2
+    },
+    "description": "Put story events in the right order. Great for understanding story structure!",
+    "theme": "Story Order"
+  }
+]
