@@ -1,164 +1,126 @@
-name: Deploy to S3
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
+      # 🚀 Upload build to S3 with correct Content-Type & Cache-Control
+      - name: Upload static assets with explicit MIME types
         env:
-          # Add your environment variables here
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_AUTH0_DOMAIN: ${{ secrets.VITE_AUTH0_DOMAIN }}
-          VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
-          VITE_AUTH0_AUDIENCE: ${{ secrets.VITE_AUTH0_AUDIENCE }}
-
-      - name: List build output
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          echo "Contents of dist folder:"
-          ls -R dist/
+          set -e
 
-      - name: Summarize build size
-        run: |
-          echo "Dist total size:" 
-          du -sh dist || true
-          echo "Top-level dist files:" 
-          ls -alh dist || true
-          echo "All files with sizes:" 
-          find dist -maxdepth 3 -type f -exec ls -alh {} \; || true
+          echo "Uploading JS (including .mjs) with long cache + correct content-type..."
+          aws s3 cp dist/assets/ s3://$BUCKET/assets/ \
+            --recursive --exclude "*" --include "*.js" --include "*.mjs" \
+            --content-type "application/javascript" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE"
 
-      - name: Upload dist artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ github.run_number }}
-          path: dist
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Deploy to S3
-        run: |
-          echo "Syncing files to S3..."
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ --delete
-          echo "Deployment complete!"
-          echo "Listing S3 bucket contents:"
-          aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/ --recursive
-          
-      # Re-upload with proper cache headers while preserving content-type (aws assigns by extension on upload).
-      - name: Apply cache headers (assets & HTML)
-        run: |
-          echo "Uploading JS assets with explicit content-type and long cache headers..."
-          aws s3 cp dist/assets/ s3://${{ secrets.S3_BUCKET_NAME }}/assets/ \
-            --recursive --exclude "*" --include "*.js" \
-            --content-type "application/javascript" --cache-control "max-age=31536000,public"
-
-          echo "Uploading CSS assets with explicit content-type and long cache headers..."
-          aws s3 cp dist/assets/ s3://${{ secrets.S3_BUCKET_NAME }}/assets/ \
+          echo "Uploading CSS with long cache..."
+          aws s3 cp dist/assets/ s3://$BUCKET/assets/ \
             --recursive --exclude "*" --include "*.css" \
-            --content-type "text/css" --cache-control "max-age=31536000,public"
+            --content-type "text/css" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE"
 
-          echo "Uploading remaining assets (images/fonts) with long cache headers..."
-          aws s3 cp dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
-            --recursive --exclude "index.html" --exclude "*.js" --exclude "*.css" \
+          echo "Uploading WASM with long cache..."
+          aws s3 cp dist/assets/ s3://$BUCKET/assets/ \
+            --recursive --exclude "*" --include "*.wasm" \
+            --content-type "application/wasm" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE"
+
+          echo "Uploading source maps with long cache..."
+          aws s3 cp dist/assets/ s3://$BUCKET/assets/ \
+            --recursive --exclude "*" --include "*.map" \
+            --content-type "application/json" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE"
+
+          echo "Uploading JSON with long cache..."
+          aws s3 cp dist/ s3://$BUCKET/ \
+            --recursive --exclude "*" --include "*.json" \
+            --content-type "application/json" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE"
+
+          echo "Uploading images with long cache..."
+          for EXT in png jpg jpeg webp gif svg ico; do
+            case "$EXT" in
+              svg) CT="image/svg+xml" ;;
+              ico) CT="image/x-icon" ;;
+              png) CT="image/png" ;;
+              jpg|jpeg) CT="image/jpeg" ;;
+              webp) CT="image/webp" ;;
+              gif) CT="image/gif" ;;
+            esac
+            aws s3 cp dist/ s3://$BUCKET/ \
+              --recursive --exclude "*" --include "*.${EXT}" \
+              --content-type "$CT" \
+              --cache-control "max-age=31536000,public" \
+              --metadata-directive "REPLACE" || true
+          done
+
+          echo "Uploading fonts with long cache..."
+          # woff2, woff, ttf, eot are common
+          aws s3 cp dist/ s3://$BUCKET/ \
+            --recursive --exclude "*" --include "*.woff2" \
+            --content-type "font/woff2" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE" || true
+
+          aws s3 cp dist/ s3://$BUCKET/ \
+            --recursive --exclude "*" --include "*.woff" \
+            --content-type "font/woff" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE" || true
+
+          aws s3 cp dist/ s3://$BUCKET/ \
+            --recursive --exclude "*" --include "*.ttf" \
+            --content-type "font/ttf" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE" || true
+
+          aws s3 cp dist/ s3://$BUCKET/ \
+            --recursive --exclude "*" --include "*.eot" \
+            --content-type "application/vnd.ms-fontobject" \
+            --cache-control "max-age=31536000,public" \
+            --metadata-directive "REPLACE" || true
+
+          echo "Uploading any remaining non-HTML files (fallback, long cache, let AWS guess types)..."
+          aws s3 cp dist/ s3://$BUCKET/ \
+            --recursive \
+            --exclude "*.html" \
+            --exclude "*.js" --exclude "*.mjs" \
+            --exclude "*.css" --exclude "*.map" \
+            --exclude "*.wasm" \
+            --exclude "*.json" \
+            --exclude "*.png" --exclude "*.jpg" --exclude "*.jpeg" --exclude "*.webp" --exclude "*.gif" --exclude "*.svg" --exclude "*.ico" \
+            --exclude "*.woff2" --exclude "*.woff" --exclude "*.ttf" --exclude "*.eot" \
             --cache-control "max-age=31536000,public"
 
-          echo "Uploading index.html with no-cache headers..."
-          aws s3 cp dist/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html \
-            --cache-control "max-age=0,no-cache,no-store,must-revalidate" --content-type "text/html"
-
-          echo "Verifying content-type of a JS and CSS bundle:"
-          JS_FILE=$(aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/assets/ | awk '{print $4}' | grep -E '\.js$' | head -1)
-          CSS_FILE=$(aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/assets/ | awk '{print $4}' | grep -E '\.css$' | head -1)
-          if [ -n "$JS_FILE" ]; then
-            echo "JS ($JS_FILE) Content-Type:";
-            aws s3api head-object --bucket ${{ secrets.S3_BUCKET_NAME }} --key assets/$JS_FILE --query 'ContentType'
-          else
-            echo "No JS file found in assets directory";
-          fi
-          if [ -n "$CSS_FILE" ]; then
-            echo "CSS ($CSS_FILE) Content-Type:";
-            aws s3api head-object --bucket ${{ secrets.S3_BUCKET_NAME }} --key assets/$CSS_FILE --query 'ContentType'
-          else
-            echo "No CSS file found in assets directory";
-          fi
+          echo "Uploading HTML with no-cache headers..."
+          # index.html (and any route HTML if you export them)
+          find dist -maxdepth 1 -name "*.html" | while read -r FILE; do
+            KEY=$(basename "$FILE")
+            aws s3 cp "$FILE" "s3://$BUCKET/$KEY" \
+              --content-type "text/html" \
+              --cache-control "max-age=0,no-cache,no-store,must-revalidate" \
+              --metadata-directive "REPLACE"
+          done
 
       - name: Invalidate CloudFront cache (optional)
         if: vars.CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
-      - name: Verify website endpoint headers (JS)
+      - name: Verify one JS over the website endpoint
+        if: always()
         env:
           BUCKET: ${{ secrets.S3_BUCKET_NAME }}
           REGION: ${{ secrets.AWS_REGION }}
         run: |
-          set -e
-          echo "Detecting a JS bundle in s3://$BUCKET/assets/ ..."
-          JS_FILE=$(aws s3 ls s3://$BUCKET/assets/ | awk '{print $4}' | grep -E '\.js$' | head -1)
+          JS_FILE=$(aws s3 ls s3://$BUCKET/assets/ | awk '{print $4}' | grep -E '\.(mjs|js)$' | head -1)
           if [ -z "$JS_FILE" ]; then
-            echo "No JS file found under s3://$BUCKET/assets/."; exit 1;
+            echo "No JS/MJS found in assets"; exit 1
           fi
           URL="http://$BUCKET.s3-website-$REGION.amazonaws.com/assets/$JS_FILE"
           echo "HEAD $URL"
-          curl -sI "$URL" | tr -d '\r' | sed -n '1,20p'
-          echo "Content-Type from website endpoint:"
-          curl -sI "$URL" | tr -d '\r' | grep -i '^Content-Type:' || true
-
-      - name: Force metadata fix if JS served as octet-stream
-        env:
-          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
-          REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          set -e
-          JS_FILE=$(aws s3 ls s3://$BUCKET/assets/ | awk '{print $4}' | grep -E '\.js$' | head -1)
-          if [ -z "$JS_FILE" ]; then
-            echo "No JS file found under s3://$BUCKET/assets/. Skipping metadata fix."; exit 0;
-          fi
-          URL="http://$BUCKET.s3-website-$REGION.amazonaws.com/assets/$JS_FILE"
-          CT=$(curl -sI "$URL" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1} /^Content-Type:/ {print tolower($0)}')
-          echo "Current Content-Type header: $CT"
-          echo "$CT" | grep -q "application/javascript" && echo "Correct Content-Type; no fix needed." && exit 0
-          echo "Incorrect Content-Type detected. Re-writing object metadata for $JS_FILE ..."
-          aws s3api copy-object \
-            --bucket $BUCKET \
-            --copy-source $BUCKET/assets/$JS_FILE \
-            --key assets/$JS_FILE \
-            --content-type application/javascript \
-            --cache-control max-age=31536000,public \
-            --metadata-directive REPLACE >/dev/null
-          echo "Re-uploading index.html to ensure fresh reference..."
-          aws s3api copy-object \
-            --bucket $BUCKET \
-            --copy-source $BUCKET/index.html \
-            --key index.html \
-            --content-type text/html \
-            --cache-control max-age=0,no-cache,no-store,must-revalidate \
-            --metadata-directive REPLACE >/dev/null
-          echo "Verifying fixed Content-Type..."
-          curl -sI "$URL" | tr -d '\r' | grep -i '^Content-Type:' || true
+          curl -sI "$URL" | tr -d '\r' | sed -n '1,25p'
+          echo "Expecting Content-Type: application/javascript"
