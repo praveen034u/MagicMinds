@@ -129,3 +129,36 @@ jobs:
           curl -sI "$URL" | tr -d '\r' | sed -n '1,20p'
           echo "Content-Type from website endpoint:"
           curl -sI "$URL" | tr -d '\r' | grep -i '^Content-Type:' || true
+
+      - name: Force metadata fix if JS served as octet-stream
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          set -e
+          JS_FILE=$(aws s3 ls s3://$BUCKET/assets/ | awk '{print $4}' | grep -E '\.js$' | head -1)
+          if [ -z "$JS_FILE" ]; then
+            echo "No JS file found under s3://$BUCKET/assets/. Skipping metadata fix."; exit 0;
+          fi
+          URL="http://$BUCKET.s3-website-$REGION.amazonaws.com/assets/$JS_FILE"
+          CT=$(curl -sI "$URL" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1} /^Content-Type:/ {print tolower($0)}')
+          echo "Current Content-Type header: $CT"
+          echo "$CT" | grep -q "application/javascript" && echo "Correct Content-Type; no fix needed." && exit 0
+          echo "Incorrect Content-Type detected. Re-writing object metadata for $JS_FILE ..."
+          aws s3api copy-object \
+            --bucket $BUCKET \
+            --copy-source $BUCKET/assets/$JS_FILE \
+            --key assets/$JS_FILE \
+            --content-type application/javascript \
+            --cache-control max-age=31536000,public \
+            --metadata-directive REPLACE >/dev/null
+          echo "Re-uploading index.html to ensure fresh reference..."
+          aws s3api copy-object \
+            --bucket $BUCKET \
+            --copy-source $BUCKET/index.html \
+            --key index.html \
+            --content-type text/html \
+            --cache-control max-age=0,no-cache,no-store,must-revalidate \
+            --metadata-directive REPLACE >/dev/null
+          echo "Verifying fixed Content-Type..."
+          curl -sI "$URL" | tr -d '\r' | grep -i '^Content-Type:' || true
