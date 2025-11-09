@@ -112,3 +112,20 @@ jobs:
         if: vars.CLOUDFRONT_DISTRIBUTION_ID != ''
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+
+      - name: Verify website endpoint headers (JS)
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          REGION: ${{ secrets.AWS_REGION }}
+        run: |
+          set -e
+          echo "Detecting a JS bundle in s3://$BUCKET/assets/ ..."
+          JS_FILE=$(aws s3 ls s3://$BUCKET/assets/ | awk '{print $4}' | grep -E '\.js$' | head -1)
+          if [ -z "$JS_FILE" ]; then
+            echo "No JS file found under s3://$BUCKET/assets/."; exit 1;
+          fi
+          URL="http://$BUCKET.s3-website-$REGION.amazonaws.com/assets/$JS_FILE"
+          echo "HEAD $URL"
+          curl -sI "$URL" | tr -d '\r' | sed -n '1,20p'
+          echo "Content-Type from website endpoint:"
+          curl -sI "$URL" | tr -d '\r' | grep -i '^Content-Type:' || true
