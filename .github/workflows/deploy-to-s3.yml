@@ -38,6 +38,23 @@ jobs:
           echo "Contents of dist folder:"
           ls -R dist/
 
+      - name: Summarize build size
+        run: |
+          echo "Dist total size:" 
+          du -sh dist || true
+          echo "Top-level dist files:" 
+          ls -alh dist || true
+          echo "All files with sizes:" 
+          find dist -maxdepth 3 -type f -exec ls -alh {} \; || true
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.run_number }}
+          path: dist
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
