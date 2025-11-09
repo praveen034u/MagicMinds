@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// Deno runtime global (keep typed as any for compatibility in editors)
+declare const Deno: any;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,7 +22,7 @@ function generateRoomCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-serve(async (req) => {
+serve(async (req: any) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -56,7 +59,8 @@ serve(async (req) => {
       room_id,
       request_id,
       approve,
-      invitation_id
+      invitation_id,
+      total_questions
     } = await req.json();
 
     console.log('Received request:', { action, child_id, game_id, room_code });
@@ -269,7 +273,7 @@ serve(async (req) => {
               .not('child_id', 'is', null);
 
             if (remainingParticipants && remainingParticipants.length > 0) {
-              const participantIds = remainingParticipants.map(p => p.child_id);
+              const participantIds = remainingParticipants.map((p: any) => p.child_id);
               await supabase
                 .from('children_profiles')
                 .update({ room_id: null } as any)
@@ -318,7 +322,7 @@ serve(async (req) => {
         }
 
         // Create join requests for each friend with proper room_id
-        const invitationsToCreate = friendProfiles.map(friend => ({
+        const invitationsToCreate = friendProfiles.map((friend: any) => ({
           room_id: roomInfo.id,
           room_code: roomInfo.room_code,
           child_id: friend.id,
@@ -536,6 +540,74 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
 
+      case 'mark_player_finished':
+        // Mark a player as finished in the room's player_progress JSON and
+        // if all participants have finished (based on multiplayer_game_scores.total_questions)
+        // then set the room status to 'finished' so realtime notifies all clients.
+
+        {
+          if (!room_id) {
+            return new Response(JSON.stringify({ success: false, error: 'room_id required' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+
+          // Load current room
+          const { data: room } = await supabaseServiceRole
+            .from('game_rooms')
+            .select('id, player_progress')
+            .eq('id', room_id)
+            .single();
+
+          const now = new Date().toISOString();
+
+          // Build new player_progress
+          let currentProgress = room?.player_progress || {};
+          try {
+            // Ensure it's an object
+            if (typeof currentProgress === 'string') {
+              currentProgress = JSON.parse(currentProgress);
+            }
+          } catch (e) {
+            currentProgress = {};
+          }
+
+          const key = child_id || 'unknown';
+          currentProgress[key] = { finished_at: now, total_questions };
+
+          // Persist player_progress
+          await supabaseServiceRole
+            .from('game_rooms')
+            .update({ player_progress: currentProgress })
+            .eq('id', room_id);
+
+          // Check if all participants have finished by consulting multiplayer_game_scores
+          const { data: scoreRows } = await supabaseServiceRole
+            .from('multiplayer_game_scores')
+            .select('id, total_questions')
+            .eq('room_id', room_id);
+
+          // Get participant count
+          const { data: participants } = await supabaseServiceRole
+            .from('room_participants')
+            .select('id')
+            .eq('room_id', room_id);
+
+          const required = Number(total_questions) || 10;
+          const finishedCount = (scoreRows || []).filter((r: any) => (r.total_questions ?? 0) >= required).length;
+          const participantCount = (participants || []).length;
+
+          let allFinished = false;
+          if (participantCount > 0 && finishedCount >= participantCount) {
+            // mark room finished
+            await supabaseServiceRole
+              .from('game_rooms')
+              .update({ status: 'finished', updated_at: now })
+              .eq('id', room_id);
+            allFinished = true;
+          }
+
+          return new Response(JSON.stringify({ success: true, all_finished: allFinished }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
       case 'close_room':
         // When host closes the room, set all participants' room_id to null
         const { data: allRoomParticipants } = await supabase
@@ -544,7 +616,7 @@ serve(async (req) => {
           .eq('room_id', room_id);
         
         if (allRoomParticipants && allRoomParticipants.length > 0) {
-          const participantIds = allRoomParticipants.map(p => p.child_id).filter(Boolean);
+          const participantIds = allRoomParticipants.map((p: any) => p.child_id).filter(Boolean);
           if (participantIds.length > 0) {
             await supabase
               .from('children_profiles')

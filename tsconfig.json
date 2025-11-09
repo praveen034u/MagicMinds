@@ -13,4 +13,9 @@
     "noUnusedLocals": false,
     "strictNullChecks": false
   }
+  ,
+  "exclude": [
+    "supabase/functions/**",
+    "supabase/migrations/**"
+  ]
 }

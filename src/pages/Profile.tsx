@@ -128,21 +128,58 @@ const Profile = () => {
                     }`}
                     onClick={() => setSelectedChild(child)}
                   >
-                    <div className="text-center space-y-2">
+                      <div className="text-center space-y-2">
                       <div className="text-3xl">{child.avatar || '👤'}</div>
                       <h3 className="font-fredoka font-bold">{child.name}</h3>
                       <p className="text-sm text-muted-foreground capitalize">{child.age_group}</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedChild(child);
-                          setIsEditing(true);
-                        }}
-                      >
-                        Edit
-                      </Button>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedChild(child);
+                            setIsEditing(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            // Confirm deletion
+                            const confirmed = window.confirm(`Delete ${child.name}? This action cannot be undone.`);
+                            if (!confirmed) return;
+
+                            try {
+                              // call supabase edge function to delete the child
+                              await supabase.functions.invoke('manage-profiles', {
+                                body: {
+                                  action: 'delete_child',
+                                  auth0_user_id: user?.sub,
+                                  profile_data: { child_id: child.id }
+                                }
+                              });
+
+                              // refresh profiles afterwards
+                              await refreshProfiles();
+
+                              // if the deleted child was selected, clear selection
+                              if (selectedChild?.id === child.id) {
+                                setSelectedChild(null);
+                              }
+                            } catch (err) {
+                              console.error('Error deleting child profile:', err);
+                              // minimal user feedback
+                              alert('Failed to delete profile. Please try again.');
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}

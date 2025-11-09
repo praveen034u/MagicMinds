@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/contexts/Auth0Context";
 import { useProgress } from "@/contexts/ProgressContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 import GameRoomPanel from "@/components/Multiplayer/GameRoomPanel";
 import { AppHeader } from "@/components/Navigation/AppHeader";
 import riddlesData from "@/config/riddles.json";
@@ -58,8 +59,11 @@ const RiddleGame = () => {
   const [finalPlayerScore, setFinalPlayerScore] = useState<number | null>(null);
   const [showNewPlayerDialog, setShowNewPlayerDialog] = useState(false);
   const [newPlayerInfo, setNewPlayerInfo] = useState<Player | null>(null);
+  // incoming rematch request state for showing a popup/modal
+  const [incomingRematch, setIncomingRematch] = useState<any | null>(null);
 
   const gameEndedRef = useRef(false);
+  const scoreboardPollRef = useRef<number | null>(null);
   const countdownTimerRef = useRef<number | null>(null);
   const fallbackTimeoutRef = useRef<number | null>(null);
   const gameTimerRef = useRef<number | null>(null);
@@ -384,6 +388,7 @@ const RiddleGame = () => {
       clearTimeoutRef(fallbackTimeoutRef);
       clearIntervalRef(gameTimerRef);
       clearTimeoutRef(feedbackTimeoutRef);
+      clearIntervalRef(scoreboardPollRef);
 
       // remove any supabase channel cleanup
       const cleanup = (window as any).__riddle_room_cleanup;
@@ -689,6 +694,80 @@ const RiddleGame = () => {
   const finishGame = async () => {
     if (gameEndedRef.current) return; // idempotent
 
+    const totalQuestions = Math.max(1, gameRiddles.length);
+    const playerId = selectedChild?.id || 'player1';
+
+    // Persist latest scores first
+    if (currentRoomId) {
+      try { await fetchRoomScores(currentRoomId); } catch (e) { /* ignore */ }
+
+      // Tell the server this player has finished their questions. The server will
+      // update a room-level player_progress and, if everyone finished, mark the room as finished.
+      try {
+        const res = await supabase.functions.invoke('manage-game-rooms', {
+          body: {
+            action: 'mark_player_finished',
+            room_id: currentRoomId,
+            child_id: playerId,
+            total_questions: totalQuestions
+          }
+        });
+
+        // res.data may include { all_finished: boolean }
+        const resp = res.data;
+        const allFinished = resp?.all_finished ?? false;
+
+        if (allFinished) {
+          // server decided everyone finished — finalize immediately
+          await finalizeGame();
+          return;
+        }
+
+        // Not everyone finished yet — show waiting scoreboard and rely on realtime updates
+        setGamePhase('scoreboard');
+        gameEndedRef.current = true;
+
+        // Fallback poll in case realtime misses the final update
+        clearIntervalRef(scoreboardPollRef);
+        scoreboardPollRef.current = window.setInterval(async () => {
+          try {
+            await fetchRoomScores(currentRoomId);
+            const nowAll = (playersRef.current || players).every(p => (p.attempts ?? 0) >= totalQuestions);
+            if (nowAll) {
+              clearIntervalRef(scoreboardPollRef);
+              await finalizeGameAfterWait();
+            }
+          } catch (e) { /* ignore */ }
+        }, 2000);
+
+        return;
+      } catch (err) {
+        console.error('mark_player_finished failed', err);
+        // fallback to previous behaviour
+        const allFinished = (playersRef.current || players).every(p => (p.attempts ?? 0) >= totalQuestions);
+        if (!allFinished) {
+          setGamePhase('scoreboard');
+          gameEndedRef.current = true;
+          return;
+        }
+      }
+    }
+
+    // Single-player or fallback: finalize immediately
+    await finalizeGame();
+  };
+
+  const finalizeGameAfterWait = async () => {
+    // Called when polling/realtime detects all players finished
+    await finalizeGame();
+  };
+
+  const finalizeGame = async () => {
+    if (gameEndedRef.current !== true) {
+      // ensure we mark ended
+      gameEndedRef.current = true;
+    }
+
     // attempt to sync final DB scores before snapshotting
     if (currentRoomId) {
       try { await fetchRoomScores(currentRoomId); } catch (e) { /* ignore */ }
@@ -704,13 +783,13 @@ const RiddleGame = () => {
 
     // now switch phase — scoreboard will read from the snapshot
     setGamePhase('complete');
-    gameEndedRef.current = true;
 
     // Clear any running timers so nothing restarts the game
     clearIntervalRef(countdownTimerRef);
     clearIntervalRef(gameTimerRef);
     clearTimeoutRef(fallbackTimeoutRef);
     clearTimeoutRef(feedbackTimeoutRef);
+    clearIntervalRef(scoreboardPollRef);
 
     // compute totals & persist using the snapshot
     const totalQuestions = Math.max(1, currentRiddleIndex + 1);
@@ -736,24 +815,88 @@ const RiddleGame = () => {
     });
   };
 
-  const handlePlayAgain = () => {
-    // reset runtime flags
+  const handlePlayAgain = async () => {
+    // Multiplayer: send a rematch request to the room and wait for others to accept
+    if (currentRoomId) {
+      try {
+        const payload = {
+          requester_child_id: selectedChild?.id ?? null,
+          requester_name: selectedChild?.name ?? 'Player',
+          requested_at: new Date().toISOString()
+        } as any;
+
+        const { data: upData, error: upError, status: upStatus } = await supabase
+          .from('game_rooms')
+          .update({ play_again_request: payload } as any)
+          .eq('id', currentRoomId)
+          .select()
+          .maybeSingle();
+
+        if (upError) {
+          console.error('Supabase update error (play_again_request):', upError, upStatus, upData);
+          toast({ title: 'Rematch error', description: upError.message || 'Failed to request rematch.' });
+        } else {
+          // success
+          toast({ title: 'Rematch requested', description: 'Waiting for other players to join the rematch.' });
+        }
+      } catch (e) {
+        console.error('Failed to request rematch', e);
+        toast({ title: 'Error', description: 'Could not request rematch.' });
+      }
+      return;
+    }
+
+    // Single-player or fallback: local reset
     gameEndedRef.current = false;
     setCurrentRiddleIndex(0);
     setSelectedAnswer(null);
     setShowFeedback(false);
 
     // Reset scores but keep players
-    setPlayersSafe(prev => prev.map(p => ({ ...p, score: 0 })));
+    setPlayersSafe(prev => prev.map(p => ({ ...p, score: 0, attempts: 0 })));
 
     // Go directly to countdown/playing phase, restart game timer
     setGamePhase('playing');
     startGameTimer();
   };
 
+  const acceptPlayAgain = async () => {
+    if (!currentRoomId) return;
+    try {
+      // Re-initialize scores in DB and clear any play_again_request marker
+      await initializeGameScores(currentRoomId, playersRef.current);
+
+      // Ensure the room keeps the same selected_category. Fetch DB value and prefer it if present.
+      const { data: roomRow } = await supabase.from('game_rooms').select('selected_category').eq('id', currentRoomId).maybeSingle();
+      const categoryToSet = (roomRow && (roomRow as any).selected_category) || selectedCategory || null;
+
+      const updatePayload: any = { play_again_request: null, status: 'playing' };
+      if (categoryToSet) updatePayload.selected_category = categoryToSet;
+
+      const { data: accData, error: accError, status: accStatus } = await supabase
+        .from('game_rooms')
+        .update(updatePayload)
+        .eq('id', currentRoomId)
+        .select()
+        .maybeSingle();
+
+      if (accError) {
+        console.error('Supabase acceptPlayAgain update error:', accError, accStatus, accData);
+        toast({ title: 'Rematch error', description: accError.message || 'Failed to start rematch.' });
+        return;
+      }
+      // clients will get realtime update and transition to countdown/playing
+    } catch (e) {
+      console.error('Failed to accept play again', e);
+      toast({ title: 'Error', description: 'Could not start rematch.' });
+    }
+  };
   const handleJoinRequestUpdate = (requestCount: number) => {
     setPendingJoinRequests(requestCount);
   };
+
+  // Track last seen play_again_request to avoid duplicate toasts
+  const lastPlayRequestRef = useRef<string | null>(null);
 
   // Cleanup any temporary room subscriptions created by loadRoomData
   useEffect(() => {
@@ -794,11 +937,15 @@ const RiddleGame = () => {
 
   // Subscribe to game_rooms updates so invited players learn when the host starts
   useEffect(() => {
-    if (!roomCode) return;
+    // subscribe to game_rooms updates by room code when available, otherwise by room id
+    const filterBy = roomCode ? `room_code=eq.${roomCode}` : (currentRoomId ? `id=eq.${currentRoomId}` : null);
+    if (!filterBy) return;
+
+    const channelName = `game-room-updates-${roomCode ?? currentRoomId}`;
 
     const channel = supabase
-      .channel(`game-room-updates-${roomCode}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_rooms', filter: `room_code=eq.${roomCode}` }, (payload) => {
+      .channel(channelName)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_rooms', filter: filterBy }, (payload) => {
         const rec: any = payload.new;
         if (!rec) return;
 
@@ -819,10 +966,56 @@ const RiddleGame = () => {
           setGamePhase('countdown');
           startCountdown();
         }
+
+        // If server marks room finished (all players finished), finalize locally
+        if (rec.status === 'finished') {
+          // ensure we snapshot latest scores and move to complete
+          finalizeGame().catch((e) => console.error('Failed to finalize on room finished update', e));
+        }
+
+        // If a play-again request was posted by someone, show a toast + popup to other players
+        if (rec.play_again_request) {
+          try {
+            const req = rec.play_again_request as any;
+            const key = `${req.requester_child_id || 'anon'}::${req.requested_at || ''}`;
+            // avoid showing the same toast/modal multiple times
+            if (lastPlayRequestRef.current === key) return;
+            lastPlayRequestRef.current = key;
+
+            // if this client is NOT the requester, show an accept toast and modal
+            if (req.requester_child_id !== (selectedChild?.id)) {
+              // set modal state so a pop-up appears on screen
+              setIncomingRematch(req);
+              const t = toast({
+                title: `${req.requester_name || 'Player'} wants a rematch!`,
+                description: 'Join the rematch with a fresh game — Tap Play to accept.',
+                action: (
+                  <ToastAction altText="Accept rematch" onClick={() => {
+                    // dismiss the toast immediately and accept
+                    try { t.dismiss(); } catch (_) {}
+                    setIncomingRematch(null);
+                    acceptPlayAgain();
+                  }}>
+                    Play
+                  </ToastAction>
+                )
+              });
+            } else {
+              // requester sees a confirmation toast
+              toast({ title: 'Rematch requested', description: 'Waiting for other players to accept.' });
+            }
+          } catch (e) {
+            console.error('Failed to handle play_again_request realtime', e);
+          }
+        } else {
+          // when play_again_request cleared on room, reset dedupe key and modal state so future requests show
+          lastPlayRequestRef.current = null;
+          setIncomingRematch(null);
+        }
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { try { supabase.removeChannel(channel); } catch (e) { /* ignore */ } };
   }, [roomCode]);
 
   // Sync multiplayer scores in realtime so everyone sees updated scores as answers are recorded
@@ -1040,6 +1233,56 @@ const RiddleGame = () => {
       </div>
     );
   }
+
+      // Scoreboard Wait Phase (multiplayer) — show a waiting scoreboard until everyone has attempted all questions
+      if (gamePhase === 'scoreboard') {
+        const totalQuestions = Math.max(1, gameRiddles.length);
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 p-4">
+            <Background3D />
+            <Card className="max-w-lg mx-auto bg-white/90 shadow-xl">
+              <CardHeader className="text-center">
+                <div className="text-4xl mb-2">⏳</div>
+                <CardTitle className="text-2xl font-fredoka text-primary">Waiting for players to finish</CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">We'll show the final scoreboard once everyone has attempted all {totalQuestions} questions.</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {[...players].map((p) => (
+                    <div key={p.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/10">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8"><AvatarFallback className="text-lg">{p.avatar}</AvatarFallback></Avatar>
+                        <div>
+                          <div className="font-medium text-primary">{p.name}</div>
+                          <div className="text-xs text-muted-foreground">{p.attempts ?? 0}/{totalQuestions} attempted</div>
+                        </div>
+                      </div>
+                      <div className="text-sm font-semibold">{p.score}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-center">
+                  <Button onClick={async () => {
+                    // allow manual force finalize for host in case of stuck state
+                    if (!currentRoomId) return;
+                    // fetch latest and check; if all finished, finalize
+                    await fetchRoomScores(currentRoomId);
+                    const totalQ = Math.max(1, gameRiddles.length);
+                    const all = (playersRef.current || players).every(pp => (pp.attempts ?? 0) >= totalQ);
+                    if (all) {
+                      await finalizeGame();
+                    } else {
+                      toast({ title: 'Not all players finished', description: 'Please wait for everyone to finish their attempts.' });
+                    }
+                  }}>
+                    Refresh Status
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      }
 
   // Game Complete Phase — render using the stable snapshot (finalPlayersSnapshot)
   if (gamePhase === 'complete') {
@@ -1324,6 +1567,7 @@ const RiddleGame = () => {
           </Card>
         </div>
       )}
+
 
       {gamePhase !== 'playing' && (
         <GameRoomPanel
