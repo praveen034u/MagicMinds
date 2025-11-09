@@ -4,13 +4,13 @@
     "title": "Riddle Time! 🤔",
     "icon": "❓",
     "enabled": true,
-    "difficulties": ["easy", "medium", "hard"],
+    "difficulties": ["easy1", "medium", "hard"],
     "dataSource": "local:riddles.json",
     "scoring": {
       "correct": 1,
       "streakBonus": 1
     },
-    "description": "Solve fun riddles and brain teasers! Pick your favorite theme and test your thinking skills.",
+    "description": "Solve fun riddles and brain teasers!! Pick your favorite theme and test your thinking skills.",
     "theme": "Zoo Animals"
   },
   {
