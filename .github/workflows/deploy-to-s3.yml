@@ -73,16 +73,39 @@ jobs:
       # Re-upload with proper cache headers while preserving content-type (aws assigns by extension on upload).
       - name: Apply cache headers (assets & HTML)
         run: |
-          echo "Uploading versioned assets with long cache headers..."
-          aws s3 cp dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ --recursive --exclude "index.html" --cache-control "max-age=31536000,public"
+          echo "Uploading JS assets with explicit content-type and long cache headers..."
+          aws s3 cp dist/assets/ s3://${{ secrets.S3_BUCKET_NAME }}/assets/ \
+            --recursive --exclude "*" --include "*.js" \
+            --content-type "application/javascript" --cache-control "max-age=31536000,public"
+
+          echo "Uploading CSS assets with explicit content-type and long cache headers..."
+          aws s3 cp dist/assets/ s3://${{ secrets.S3_BUCKET_NAME }}/assets/ \
+            --recursive --exclude "*" --include "*.css" \
+            --content-type "text/css" --cache-control "max-age=31536000,public"
+
+          echo "Uploading remaining assets (images/fonts) with long cache headers..."
+          aws s3 cp dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ \
+            --recursive --exclude "index.html" --exclude "*.js" --exclude "*.css" \
+            --cache-control "max-age=31536000,public"
+
           echo "Uploading index.html with no-cache headers..."
-          aws s3 cp dist/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html --cache-control "max-age=0,no-cache,no-store,must-revalidate" --content-type "text/html"
-          echo "Verifying content-type of JS bundle:"
+          aws s3 cp dist/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html \
+            --cache-control "max-age=0,no-cache,no-store,must-revalidate" --content-type "text/html"
+
+          echo "Verifying content-type of a JS and CSS bundle:"
           JS_FILE=$(aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/assets/ | awk '{print $4}' | grep -E '\.js$' | head -1)
+          CSS_FILE=$(aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/assets/ | awk '{print $4}' | grep -E '\.css$' | head -1)
           if [ -n "$JS_FILE" ]; then
+            echo "JS ($JS_FILE) Content-Type:";
             aws s3api head-object --bucket ${{ secrets.S3_BUCKET_NAME }} --key assets/$JS_FILE --query 'ContentType'
           else
-            echo "No JS file found in assets directory"
+            echo "No JS file found in assets directory";
+          fi
+          if [ -n "$CSS_FILE" ]; then
+            echo "CSS ($CSS_FILE) Content-Type:";
+            aws s3api head-object --bucket ${{ secrets.S3_BUCKET_NAME }} --key assets/$CSS_FILE --query 'ContentType'
+          else
+            echo "No CSS file found in assets directory";
           fi
 
       - name: Invalidate CloudFront cache (optional)
