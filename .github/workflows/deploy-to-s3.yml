@@ -33,6 +33,11 @@ jobs:
           VITE_AUTH0_CLIENT_ID: ${{ secrets.VITE_AUTH0_CLIENT_ID }}
           VITE_AUTH0_AUDIENCE: ${{ secrets.VITE_AUTH0_AUDIENCE }}
 
+      - name: List build output
+        run: |
+          echo "Contents of dist folder:"
+          ls -R dist/
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -42,8 +47,15 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --cache-control max-age=31536000,public
-          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/index.html s3://${{ secrets.S3_BUCKET_NAME }}/index.html --metadata-directive REPLACE --cache-control max-age=0,no-cache,no-store,must-revalidate --content-type text/html
+          echo "Syncing files to S3..."
+          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }}/ --delete
+          echo "Setting cache headers for assets..."
+          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/assets/ s3://${{ secrets.S3_BUCKET_NAME }}/assets/ --recursive --metadata-directive REPLACE --cache-control max-age=31536000,public
+          echo "Setting cache headers for HTML files..."
+          aws s3 cp s3://${{ secrets.S3_BUCKET_NAME }}/ s3://${{ secrets.S3_BUCKET_NAME }}/ --recursive --exclude "*" --include "*.html" --metadata-directive REPLACE --cache-control max-age=0,no-cache,no-store,must-revalidate --content-type text/html
+          echo "Deployment complete!"
+          echo "Listing S3 bucket contents:"
+          aws s3 ls s3://${{ secrets.S3_BUCKET_NAME }}/ --recursive
 
       - name: Invalidate CloudFront cache (optional)
         if: vars.CLOUDFRONT_DISTRIBUTION_ID != ''
