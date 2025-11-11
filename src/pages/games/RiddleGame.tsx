@@ -24,6 +24,7 @@ type Player = {
   attempts?: number;
   isAI?: boolean;
   streak?: number; // NEW
+  scoreRowId?: string | number;
 };
 
 type GamePhase = 'theme-select' | 'setup' | 'countdown' | 'playing' | 'scoreboard' | 'complete';
@@ -184,8 +185,13 @@ const RiddleGame = () => {
             if (roomData.status === 'playing' && (roomData as any).selected_category) {
               // If the server already marked the room as playing, start immediately
               await initializeGameScores(roomData.id, playerList);
-              setGamePhase('countdown');
-              startCountdown();
+              // Wait for DB-authoritative score reset (with fallback) before starting countdown
+              startRematchAfterDBReady(currentRoomId).catch((e) => {
+                console.error('Failed while waiting for DB reset for rematch:', e);
+                // ensure we at least start the countdown if something goes wrong
+                setGamePhase('countdown');
+                startCountdown();
+              });
             } else {
               // stay in theme-select so host can pick theme; guests will see waiting messages
               setGamePhase('theme-select');
@@ -292,9 +298,15 @@ const RiddleGame = () => {
         total_questions: 0
       }));
 
-      await supabase
+      const { data: insertData, error: insertError } = await supabase
         .from('multiplayer_game_scores')
         .insert(scoreEntries);
+
+      if (insertError) {
+        console.error('initializeGameScores insert error', insertError);
+      } else {
+        console.log('initializeGameScores inserted rows:', insertData);
+      }
 
       // immediately sync attempts/scores from DB (authoritative)
       await fetchRoomScores(roomId);
@@ -411,9 +423,30 @@ const RiddleGame = () => {
   const gameRiddles = getCategoryRiddles(selectedCategory) || [];
   const currentRiddle = gameRiddles[currentRiddleIndex];
 
+  // Helper to ensure UI never shows attempts greater than the number of questions.
+  // Defensive behavior:
+  // - During active play, don't show attempts higher than the number of questions seen so far
+  //   (currentRiddleIndex + 1). This avoids flashes showing full completion from stale DB rows.
+  // - Outside of playing (scoreboard/complete), show the authoritative DB value up to the
+  //   total game length.
+  const safeAttempts = (p: Player) => {
+    const raw = p.attempts ?? 0;
+    const totalGameLen = Math.max(1, gameRiddles.length);
+    if (gamePhase === 'playing') {
+      // Only allow attempts up to the number of questions that have been presented so far
+      const maxVisible = Math.max(1, currentRiddleIndex + 1);
+      return Math.min(raw, maxVisible);
+    }
+    // scoreboard/complete/etc: show up to the full game length
+    return Math.min(raw, totalGameLen);
+  };
+
   const humanPlayersCount = players.filter(p => !p.isAI).length;
   const hostCanSelectTheme = !!roomCode ? (isRoomCreator && humanPlayersCount >= 2) : true;
   const canSelectTheme = hostCanSelectTheme;
+
+  // Use local transient players during active play to avoid flashes from DB sync
+  const visiblePlayers: Player[] = gamePhase === 'playing' ? (playersRef.current || players) : players;
 
   const simulateAIAnswers = () => {
     // Simulate AI players answering with random delays
@@ -453,7 +486,8 @@ const RiddleGame = () => {
         .single();
 
       if (currentScore) {
-        await supabase
+        console.log('updateAIPlayerScore: updating AI row', { room: currentRoomId, player: aiPlayer.name, inc: scoreIncrement, prev: currentScore });
+        const { data: updData, error: updError } = await supabase
           .from('multiplayer_game_scores')
           .update({
             score: currentScore.score + scoreIncrement,
@@ -462,7 +496,10 @@ const RiddleGame = () => {
           .eq('room_id', currentRoomId)
           .eq('is_ai', true)
           .eq('child_id', null)
-          .eq('player_name', aiPlayer.name);
+          .eq('player_name', aiPlayer.name)
+          .select();
+        if (updError) console.error('updateAIPlayerScore update error', updError);
+        else console.log('updateAIPlayerScore update result', updData);
         // sync local players from DB after updating
         await fetchRoomScores(currentRoomId);
       }
@@ -486,6 +523,8 @@ const RiddleGame = () => {
       }
       if (!rows) return;
 
+      console.log('fetchRoomScores:', roomId, rows.map((r: any) => ({ player_name: r.player_name, total_questions: r.total_questions, score: r.score })));
+
       // Build authoritative player list from DB rows, mapping total_questions -> attempts
       const nextPlayers: Player[] = rows.map((r: any) => ({
         id: r.child_id ?? `ai-${r.player_name}`,
@@ -494,7 +533,8 @@ const RiddleGame = () => {
         score: typeof r.score === 'number' ? r.score : 0,
         attempts: typeof r.total_questions === 'number' ? r.total_questions : 0,
         isAI: !!r.is_ai,
-        streak: 0 // DB doesn't track streaks — start at 0 on sync
+        streak: 0, // DB doesn't track streaks — start at 0 on sync
+        scoreRowId: r.id
       }));
 
       setPlayersSafe(nextPlayers);
@@ -502,6 +542,41 @@ const RiddleGame = () => {
       console.error('fetchRoomScores failed', err);
     }
   };
+
+    // Wait for DB to reflect a reset of multiplayer_game_scores (attempts === 0 for all players)
+    // This reduces flashing stale attempt counts when a rematch is accepted.
+    const startRematchAfterDBReady = async (roomId: string | null, timeout = 2500) => {
+      if (!roomId) {
+        setGamePhase('countdown');
+        startCountdown();
+        return;
+      }
+
+      const deadline = Date.now() + timeout;
+      const pollInterval = 300;
+
+      while (Date.now() < deadline) {
+        try {
+          await fetchRoomScores(roomId);
+          const playersNow = playersRef.current || players;
+          const allZero = playersNow.length === 0 || playersNow.every(p => (p.attempts ?? 0) === 0);
+          if (allZero) {
+            setGamePhase('countdown');
+            startCountdown();
+            return;
+          }
+        } catch (e) {
+          // ignore and retry
+        }
+        // small delay before retrying
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise(res => setTimeout(res, pollInterval));
+      }
+
+      // fallback: start countdown anyway
+      setGamePhase('countdown');
+      startCountdown();
+    };
 
   const handlePlayerJoin = (newPlayer: any) => {
     // Add new player if not already in the list
@@ -585,7 +660,8 @@ const RiddleGame = () => {
     const correctText = currentRiddle.options[correctIdx];
     const isCorrect = answer === correctText;
 
-    const playerId = selectedChild?.id ?? 'player1';
+  const playerId = selectedChild?.id ?? 'player1';
+  console.log('handleAnswerSelect:', { playerId, answer, isCorrect, currentIndex: currentRiddleIndex, total: gameRiddles.length });
     const baseIncrement = isCorrect ? 1 : 0;
 
     // compute streak locally & update players
@@ -638,32 +714,41 @@ const RiddleGame = () => {
     try {
       // Find the player's DB row
       const player = playersRef.current.find(p => p.id === playerId);
+      console.log('updatePlayerScore called', { room: currentRoomId, playerId, playerName: player?.name, inc: scoreIncrement });
       if (!player) return;
 
       // Attempt to get existing row
-      const { data: currentScore } = await supabase
+      const { data: currentScore, error: curErr } = await supabase
         .from('multiplayer_game_scores')
         .select('score, total_questions')
         .eq('room_id', currentRoomId)
         .eq('player_name', player.name)
+        .eq('child_id', player.isAI ? null : playerId)
         .maybeSingle();
 
+      if (curErr) console.error('updatePlayerScore fetch currentScore error', curErr);
+      else console.log('updatePlayerScore fetched currentScore', currentScore);
+
       if (currentScore) {
-        await supabase
+        const { data: updData, error: updErr } = await supabase
           .from('multiplayer_game_scores')
           .update({
             score: currentScore.score + scoreIncrement,
             total_questions: currentScore.total_questions + 1
           })
           .eq('room_id', currentRoomId)
-          .eq('player_name', player.name);
+          .eq('player_name', player.name)
+          .eq('child_id', player.isAI ? null : playerId)
+          .select();
+        if (updErr) console.error('updatePlayerScore update error', updErr);
+        else console.log('updatePlayerScore update result', updData);
         // refresh local copy after update
         await fetchRoomScores(currentRoomId);
       } else {
         // If row missing, insert a row for this player
-        await supabase
+        const { data: insData, error: insErr } = await supabase
           .from('multiplayer_game_scores')
-          .insert([{
+          .insert([{ 
             room_id: currentRoomId,
             child_id: player.isAI ? null : playerId,
             player_name: player.name,
@@ -671,7 +756,10 @@ const RiddleGame = () => {
             is_ai: player.isAI || false,
             score: scoreIncrement,
             total_questions: 1
-          }]);
+          }])
+          .select();
+        if (insErr) console.error('updatePlayerScore insert error', insErr);
+        else console.log('updatePlayerScore insert result', insData);
         // and refresh
         await fetchRoomScores(currentRoomId);
       }
@@ -704,14 +792,45 @@ const RiddleGame = () => {
       // Tell the server this player has finished their questions. The server will
       // update a room-level player_progress and, if everyone finished, mark the room as finished.
       try {
-        const res = await supabase.functions.invoke('manage-game-rooms', {
-          body: {
-            action: 'mark_player_finished',
-            room_id: currentRoomId,
-            child_id: playerId,
-            total_questions: totalQuestions
+        let res: any;
+        try {
+          res = await supabase.functions.invoke('manage-game-rooms', {
+            body: {
+              action: 'mark_player_finished',
+              room_id: currentRoomId,
+              child_id: playerId,
+              total_questions: totalQuestions
+            }
+          });
+        } catch (err: any) {
+          console.error('manage-game-rooms invoke threw', err);
+          // Try to read response body if present (helps surface server error message)
+          const resp = err?.response;
+          if (resp && typeof resp.text === 'function') {
+            try {
+              const txt = await resp.text();
+              console.error('manage-game-rooms response body (error):', txt);
+            } catch (e) { /* ignore */ }
           }
-        });
+          throw err;
+        }
+
+        // Log full response for debugging (helps explain 400s)
+        try {
+          console.log('manage-game-rooms invoke response', res);
+          if (res?.error) {
+            console.error('manage-game-rooms invoke returned error', res.error);
+            const resp = res?.response;
+            if (resp && typeof resp.text === 'function') {
+              try {
+                const txt = await resp.text();
+                console.error('manage-game-rooms response body:', txt);
+              } catch (e) { /* ignore */ }
+            }
+          }
+        } catch (e) {
+          console.error('Failed to log manage-game-rooms response', e);
+        }
 
         // res.data may include { all_finished: boolean }
         const resp = res.data;
@@ -822,7 +941,8 @@ const RiddleGame = () => {
         const payload = {
           requester_child_id: selectedChild?.id ?? null,
           requester_name: selectedChild?.name ?? 'Player',
-          requested_at: new Date().toISOString()
+          requested_at: new Date().toISOString(),
+          room_id: currentRoomId
         } as any;
 
         const { data: upData, error: upError, status: upStatus } = await supabase
@@ -836,8 +956,11 @@ const RiddleGame = () => {
           console.error('Supabase update error (play_again_request):', upError, upStatus, upData);
           toast({ title: 'Rematch error', description: upError.message || 'Failed to request rematch.' });
         } else {
-          // success
-          toast({ title: 'Rematch requested', description: 'Waiting for other players to join the rematch.' });
+          // success — set a local waiting flag so this client doesn't start the game
+          // until another player accepts the request.
+          waitingForRematchResponseRef.current = true;
+          console.log('play again requested payload', payload, 'updateResult', upData);
+          toast({ title: 'Rematch requested', description: 'Waiting for other players to accept the rematch.' });
         }
       } catch (e) {
         console.error('Failed to request rematch', e);
@@ -860,35 +983,80 @@ const RiddleGame = () => {
     startGameTimer();
   };
 
-  const acceptPlayAgain = async () => {
+  const acceptPlayAgain = async (req?: any) => {
+    // When a player accepts a rematch, we should NOT immediately flip the room status to playing
+    // from the acceptor's client. Instead, write a response into the room's play_again_request
+    // so the requester receives the response and can start the rematch (authoritatively).
     if (!currentRoomId) return;
     try {
-      // Re-initialize scores in DB and clear any play_again_request marker
-      await initializeGameScores(currentRoomId, playersRef.current);
+      const request = req ?? incomingRematch;
+      if (!request) {
+        toast({ title: 'No rematch request', description: 'Nothing to accept.' });
+        return;
+      }
 
-      // Ensure the room keeps the same selected_category. Fetch DB value and prefer it if present.
-      const { data: roomRow } = await supabase.from('game_rooms').select('selected_category').eq('id', currentRoomId).maybeSingle();
-      const categoryToSet = (roomRow && (roomRow as any).selected_category) || selectedCategory || null;
+      const response = {
+        responder_child_id: selectedChild?.id ?? null,
+        responder_name: selectedChild?.name ?? 'Player',
+        decision: 'accepted',
+        responded_at: new Date().toISOString()
+      } as any;
 
-      const updatePayload: any = { play_again_request: null, status: 'playing' };
-      if (categoryToSet) updatePayload.selected_category = categoryToSet;
+      const newPayload = { ...request, response };
 
-      const { data: accData, error: accError, status: accStatus } = await supabase
+      const _playReqPayload: any = { play_again_request: newPayload };
+      const { data, error } = await supabase
         .from('game_rooms')
-        .update(updatePayload)
+        .update(_playReqPayload)
         .eq('id', currentRoomId)
         .select()
         .maybeSingle();
 
-      if (accError) {
-        console.error('Supabase acceptPlayAgain update error:', accError, accStatus, accData);
-        toast({ title: 'Rematch error', description: accError.message || 'Failed to start rematch.' });
+      if (error) {
+        console.error('acceptPlayAgain update error', error);
+        toast({ title: 'Failed', description: 'Could not send accept response.' });
         return;
       }
-      // clients will get realtime update and transition to countdown/playing
+
+      // Let the requester observe this response and start the rematch for all players
+      toast({ title: 'Rematch accepted', description: 'Waiting for the host to start the rematch.' });
     } catch (e) {
-      console.error('Failed to accept play again', e);
-      toast({ title: 'Error', description: 'Could not start rematch.' });
+      console.error('acceptPlayAgain failed', e);
+      toast({ title: 'Error', description: 'Failed to accept rematch.' });
+    }
+  };
+
+  const declinePlayAgain = async (req: any) => {
+    if (!currentRoomId) return;
+    try {
+      const response = {
+        responder_child_id: selectedChild?.id ?? null,
+        responder_name: selectedChild?.name ?? 'Player',
+        decision: 'rejected',
+        responded_at: new Date().toISOString()
+      } as any;
+
+      const newPayload = { ...req, response };
+
+      const _playReqPayload2: any = { play_again_request: newPayload };
+      const { data, error } = await supabase
+        .from('game_rooms')
+        .update(_playReqPayload2)
+        .eq('id', currentRoomId)
+        .select()
+        .maybeSingle();
+
+      if (error) {
+        console.error('declinePlayAgain update error', error);
+        toast({ title: 'Failed', description: 'Could not send decline response.' });
+        return;
+      }
+
+      // Notify local user they declined
+      toast({ title: 'Rematch declined', description: 'You declined the rematch.' });
+    } catch (e) {
+      console.error('declinePlayAgain failed', e);
+      toast({ title: 'Error', description: 'Failed to decline rematch.' });
     }
   };
   const handleJoinRequestUpdate = (requestCount: number) => {
@@ -897,6 +1065,9 @@ const RiddleGame = () => {
 
   // Track last seen play_again_request to avoid duplicate toasts
   const lastPlayRequestRef = useRef<string | null>(null);
+  // When this client requests a rematch, set this flag so we don't react to any
+  // premature room.status='playing' updates until a responder has accepted.
+  const waitingForRematchResponseRef = useRef<boolean>(false);
 
   // Cleanup any temporary room subscriptions created by loadRoomData
   useEffect(() => {
@@ -943,6 +1114,7 @@ const RiddleGame = () => {
 
     const channelName = `game-room-updates-${roomCode ?? currentRoomId}`;
 
+    console.log('subscribing to game_rooms updates with filter', filterBy, 'channelName', channelName);
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_rooms', filter: filterBy }, (payload) => {
@@ -962,10 +1134,60 @@ const RiddleGame = () => {
         }
 
         // Only transition to countdown when server sets status='playing'
-        if (rec.status === 'playing') {
-          setGamePhase('countdown');
-          startCountdown();
-        }
+            if (rec.status === 'playing') {
+              // If there is an unresolved play_again_request, recipients should NOT
+              // start the game just because status='playing' was written; only the
+              // requester should authoritatively start after seeing an accept.
+              try {
+                const pr = (rec.play_again_request as any) || null;
+                if (pr && !(pr.response && pr.response.responder_child_id)) {
+                  // If current client is NOT the requester, ignore the status update.
+                  if (pr.requester_child_id !== (selectedChild?.id)) {
+                    return;
+                  }
+                  // If current client is the requester, fall through — we still
+                  // gate using waitingForRematchResponseRef below.
+                }
+              } catch (_) { /* ignore and proceed */ }
+
+              // If we requested a rematch locally and are still waiting for another
+              // player's response, ignore any premature status='playing' updates
+              // that arrive while the play_again_request is still present.
+              try {
+                if (waitingForRematchResponseRef.current) {
+                  const pr = rec.play_again_request as any;
+                  if (pr && pr.requester_child_id === (selectedChild?.id) && !(pr.response && pr.response.responder_child_id)) {
+                    // still waiting for response — do not start yet
+                    return;
+                  }
+                }
+              } catch (_) { /* ignore and proceed */ }
+              // Rematch / new game started on server: ensure local state is fully reset
+              try {
+                // clear any running timers to avoid leftover timers from previous game
+                gameEndedRef.current = false;
+                clearIntervalRef(countdownTimerRef);
+                clearIntervalRef(gameTimerRef);
+                clearTimeoutRef(fallbackTimeoutRef);
+                clearTimeoutRef(feedbackTimeoutRef);
+                clearIntervalRef(scoreboardPollRef);
+
+                // reset question index and transient UI state
+                setCurrentRiddleIndex(0);
+                setSelectedAnswer(null);
+                setShowFeedback(false);
+                setFinalPlayersSnapshot(null);
+                setFinalPlayerScore(null);
+
+                // reset local player scores/attempts/streaks optimistically; DB will send authoritative values
+                setPlayersSafe(prev => prev.map(p => ({ ...p, score: 0, attempts: 0, streak: 0 })));
+              } catch (e) {
+                console.error('Error resetting local state for rematch:', e);
+              }
+
+              setGamePhase('countdown');
+              startCountdown();
+            }
 
         // If server marks room finished (all players finished), finalize locally
         if (rec.status === 'finished') {
@@ -982,22 +1204,81 @@ const RiddleGame = () => {
             if (lastPlayRequestRef.current === key) return;
             lastPlayRequestRef.current = key;
 
-            // if this client is NOT the requester, show an accept toast and modal
+            // If the play_again_request already contains a response, handle it specially
+            if (req.response && req.response.responder_child_id) {
+              // If current client is the requester, handle responder decision
+              if (req.requester_child_id === (selectedChild?.id)) {
+                const decision = (req.response && req.response.decision) || 'rejected';
+                const responderName = req.response?.responder_name || 'Player';
+
+                if (decision === 'accepted') {
+                  // The responder accepted: requester should initialize DB scores and mark room playing
+                  // We're no longer waiting for a response.
+                  waitingForRematchResponseRef.current = false;
+                  toast({ title: `${responderName} accepted your rematch`, description: 'Starting new game…' });
+                  (async () => {
+                    try {
+                      // Re-initialize scores and then set status to playing
+                      await initializeGameScores(rec.id, playersRef.current || players);
+
+                      const updatePayload: any = { play_again_request: null, status: 'playing' };
+                      if (rec.selected_category) updatePayload.selected_category = rec.selected_category;
+
+                      await supabase
+                        .from('game_rooms')
+                        .update(updatePayload)
+                        .eq('id', rec.id);
+                    } catch (e) {
+                      console.error('Failed to start rematch after accept response', e);
+                      // still clear the request to avoid stuck UI
+                      try { await supabase.from('game_rooms').update({ play_again_request: null } as any).eq('id', rec.id); } catch (_) { /* ignore */ }
+                    }
+                  })();
+                } else {
+                  // Rejected — notify requester and clear the request
+                  waitingForRematchResponseRef.current = false;
+                  toast({ title: `${responderName} declined your rematch`, description: 'They chose not to play again.' });
+                  (async () => {
+                    try {
+                      await supabase
+                        .from('game_rooms')
+                        .update({ play_again_request: null } as any)
+                        .eq('id', rec.id);
+                    } catch (e) {
+                      console.error('Failed to clear play_again_request after rejection', e);
+                    }
+                  })();
+                }
+              }
+
+              // Don't show the incoming rematch modal for response payloads
+              return;
+            }
+
+            // if this client is NOT the requester, show an accept/reject toast and modal
             if (req.requester_child_id !== (selectedChild?.id)) {
               // set modal state so a pop-up appears on screen
               setIncomingRematch(req);
               const t = toast({
                 title: `${req.requester_name || 'Player'} wants a rematch!`,
-                description: 'Join the rematch with a fresh game — Tap Play to accept.',
+                description: 'Join the rematch with a fresh game — Play or Reject.',
                 action: (
-                  <ToastAction altText="Accept rematch" onClick={() => {
-                    // dismiss the toast immediately and accept
-                    try { t.dismiss(); } catch (_) {}
-                    setIncomingRematch(null);
-                    acceptPlayAgain();
-                  }}>
-                    Play
-                  </ToastAction>
+                  <>
+                    <ToastAction altText="Accept rematch" onClick={() => {
+                      try { t.dismiss(); } catch (_) {}
+                      setIncomingRematch(null);
+                      acceptPlayAgain();
+                    }}>
+                      Play
+                    </ToastAction>
+                    <ToastAction altText="Reject rematch" onClick={() => {
+                      try { t.dismiss(); } catch (_) {}
+                      setIncomingRematch(null);
+                      declinePlayAgain(req);
+                    }}>
+                      Reject
+                    </ToastAction>
+                  </>
                 )
               });
             } else {
@@ -1016,7 +1297,87 @@ const RiddleGame = () => {
       .subscribe();
 
     return () => { try { supabase.removeChannel(channel); } catch (e) { /* ignore */ } };
-  }, [roomCode]);
+  }, [roomCode, currentRoomId, selectedChild?.id]);
+
+  // Poll fallback: some clients have occasionally missed the realtime 'game_rooms'
+  // update for play_again_request. To make delivery more resilient, poll the
+  // room row a few times shortly after joining/loading the room and when the
+  // component mounts. This is low-cost and only runs for a short window.
+  useEffect(() => {
+    if (!currentRoomId) return;
+
+    let cancelled = false;
+    let attempts = 0;
+
+    const pollOnce = async () => {
+      try {
+        const { data } = await supabase
+          .from('game_rooms')
+          .select('id')
+          .eq('id', currentRoomId)
+          .maybeSingle();
+  
+        if (!data || cancelled) return;
+  
+        // Check if play_again_request exists in the data
+        const playAgainRequest = (data as any).play_again_request;
+        if (!playAgainRequest) return;
+  
+        const req = playAgainRequest as any;
+        const key = `${req.requester_child_id || 'anon'}::${req.requested_at || ''}`;
+        if (lastPlayRequestRef.current === key) return;
+        lastPlayRequestRef.current = key;
+
+        // If there's already a response, let the existing realtime handler deal with it
+        if (req.response && req.response.responder_child_id) return;
+
+        // If current client is NOT the requester, show accept/reject UI
+        if (req.requester_child_id !== (selectedChild?.id)) {
+          setIncomingRematch(req);
+          const t = toast({
+            title: `${req.requester_name || 'Player'} wants a rematch!`,
+            description: 'Join the rematch with a fresh game — Play or Reject.',
+            action: (
+              <>
+                <ToastAction altText="Accept rematch" onClick={() => {
+                  try { t.dismiss(); } catch (_) {}
+                  setIncomingRematch(null);
+                  acceptPlayAgain(req);
+                }}>
+                  Play
+                </ToastAction>
+                <ToastAction altText="Reject rematch" onClick={() => {
+                  try { t.dismiss(); } catch (_) {}
+                  setIncomingRematch(null);
+                  declinePlayAgain(req);
+                }}>
+                  Reject
+                </ToastAction>
+              </>
+            )
+          });
+        }
+      } catch (e) {
+        // ignore poll errors
+      }
+    };
+
+    // Run a few short polls over ~6 seconds
+    const interval = window.setInterval(async () => {
+      if (cancelled) return;
+      attempts += 1;
+      await pollOnce();
+      if (attempts >= 4) {
+        cancelled = true;
+        clearInterval(interval);
+      }
+    }, 1500);
+
+    // initial immediate poll
+    pollOnce();
+
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [currentRoomId, selectedChild?.id]);
 
   // Sync multiplayer scores in realtime so everyone sees updated scores as answers are recorded
   useEffect(() => {
@@ -1028,8 +1389,47 @@ const RiddleGame = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'multiplayer_game_scores', filter: `room_id=eq.${currentRoomId}` },
         (payload) => {
-          // whenever a DB change happens, refresh the scores list from DB to keep everyone in sync
-          fetchRoomScores(currentRoomId).catch((e) => { /* ignore */ });
+          try {
+            // Prefer incremental updates based on the changed row to avoid overwriting
+            // other players' local state when one player's row changes.
+            const newRow: any = payload.new;
+            const oldRow: any = payload.old;
+
+            if (newRow) {
+              const id = newRow.child_id ?? `ai-${newRow.player_name}`;
+              const updatedPlayer: Player = {
+                id,
+                name: newRow.player_name,
+                avatar: newRow.player_avatar ?? '👤',
+                score: typeof newRow.score === 'number' ? newRow.score : 0,
+                attempts: typeof newRow.total_questions === 'number' ? newRow.total_questions : 0,
+                isAI: !!newRow.is_ai,
+                streak: 0
+              };
+
+              setPlayersSafe(prev => {
+                const exists = prev.some(p => p.id === id);
+                if (exists) {
+                  return prev.map(p => p.id === id ? { ...p, score: updatedPlayer.score, attempts: updatedPlayer.attempts } : p);
+                }
+                // If not present, append (new participant)
+                return [...prev, updatedPlayer];
+              });
+              return;
+            }
+
+            if (oldRow && payload.eventType === 'DELETE') {
+              const id = oldRow.child_id ?? `ai-${oldRow.player_name}`;
+              setPlayersSafe(prev => prev.filter(p => p.id !== id));
+              return;
+            }
+
+            // Fallback: when payload isn't structured as expected, do a full refresh
+            fetchRoomScores(currentRoomId).catch(() => { /* ignore */ });
+          } catch (e) {
+            // If anything goes wrong parsing the payload, fallback to full refresh
+            fetchRoomScores(currentRoomId).catch(() => { /* ignore */ });
+          }
         }
       )
       .subscribe();
@@ -1058,6 +1458,25 @@ const RiddleGame = () => {
     }
 
     // Local optimistic transition while realtime notifies others
+    try {
+      // reset transient state locally so host sees a fresh countdown/game
+      gameEndedRef.current = false;
+      clearIntervalRef(countdownTimerRef);
+      clearIntervalRef(gameTimerRef);
+      clearTimeoutRef(fallbackTimeoutRef);
+      clearTimeoutRef(feedbackTimeoutRef);
+      clearIntervalRef(scoreboardPollRef);
+
+      setCurrentRiddleIndex(0);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+      setFinalPlayersSnapshot(null);
+      setFinalPlayerScore(null);
+      setPlayersSafe(prev => prev.map(p => ({ ...p, score: 0, attempts: 0, streak: 0 })));
+    } catch (e) {
+      console.error('Failed to reset local state before host start:', e);
+    }
+
     setGamePhase('countdown');
     setWaitingForPlayers(false);
     startCountdown();
@@ -1247,19 +1666,19 @@ const RiddleGame = () => {
                 <p className="text-sm text-muted-foreground mt-2">We'll show the final scoreboard once everyone has attempted all {totalQuestions} questions.</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  {[...players].map((p) => (
-                    <div key={p.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/10">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-8 h-8"><AvatarFallback className="text-lg">{p.avatar}</AvatarFallback></Avatar>
-                        <div>
-                          <div className="font-medium text-primary">{p.name}</div>
-                          <div className="text-xs text-muted-foreground">{p.attempts ?? 0}/{totalQuestions} attempted</div>
-                        </div>
-                      </div>
-                      <div className="text-sm font-semibold">{p.score}</div>
-                    </div>
-                  ))}
+                        <div className="space-y-3">
+                          {[...players].map((p) => (
+                            <div key={p.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/10">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8"><AvatarFallback className="text-lg">{p.avatar}</AvatarFallback></Avatar>
+                                <div>
+                                  <div className="font-medium text-primary">{p.name}</div>
+                                  <div className="text-xs text-muted-foreground">{safeAttempts(p)}/{totalQuestions} attempted</div>
+                                </div>
+                              </div>
+                              <div className="text-sm font-semibold">{p.score}</div>
+                            </div>
+                          ))}
                 </div>
                 <div className="flex justify-center">
                   <Button onClick={async () => {
@@ -1381,12 +1800,12 @@ const RiddleGame = () => {
                         <div className="text-xs text-muted-foreground">
                           <div className="w-40">
                             <Progress
-                              value={Math.min(100, ((player.attempts ?? 0) / Math.max(1, gameRiddles.length)) * 100)}
+                              value={Math.min(100, ((safeAttempts(player)) / Math.max(1, gameRiddles.length)) * 100)}
                               className="h-2 rounded-full"
                             />
                           </div>
                           <div className="mt-1">
-                            <span className="text-xs">{player.attempts ?? 0}/{Math.max(1, gameRiddles.length)}</span>
+                            <span className="text-xs">{safeAttempts(player)}/{Math.max(1, gameRiddles.length)}</span>
                             {isWinner && <span className="ml-2 text-sm text-green-700">Winner</span>}
                             {isLoser && <span className="ml-2 text-sm text-red-700">Needs practice</span>}
                           </div>
@@ -1510,7 +1929,7 @@ const RiddleGame = () => {
           </CardHeader>
           <CardContent className="py-2 px-3">
             <div className="space-y-2 max-h-64 overflow-auto">
-              {[...players].sort((a, b) => (b.attempts ?? 0) - (a.attempts ?? 0)).map((player, idx) => (
+              {[...visiblePlayers].sort((a, b) => (b.attempts ?? 0) - (a.attempts ?? 0)).map((player, idx) => (
                 <div key={player.id} className="flex items-center justify-between player-row">
                   <div className="flex items-center space-x-2">
                     <Avatar className="w-6 h-6">
@@ -1526,12 +1945,12 @@ const RiddleGame = () => {
                   <div className="flex flex-col items-end">
                     <div className="w-24">
                       <Progress
-                        value={Math.min(100, ((player.attempts ?? 0) / Math.max(1, gameRiddles.length)) * 100)}
+                        value={Math.min(100, ((safeAttempts(player)) / Math.max(1, gameRiddles.length)) * 100)}
                         className="h-2 rounded-full"
                       />
                     </div>
                     <div className="text-xs font-semibold text-primary mt-1">
-                      {player.attempts ?? 0}/{Math.max(1, gameRiddles.length)}
+                      {safeAttempts(player)}/{Math.max(1, gameRiddles.length)}
                     </div>
                   </div>
                 </div>

@@ -36,7 +36,11 @@ serve(async (req: any) => {
 
     const authToken = req.headers.get('Authorization')?.replace('Bearer ', '');
     if (!authToken) {
-      throw new Error('No authorization token provided');
+      console.warn('manage-game-rooms: missing auth token');
+      return new Response(
+        JSON.stringify({ success: false, error: 'No authorization token provided' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Create a separate client for operations that bypass RLS (service role access)
@@ -48,22 +52,35 @@ serve(async (req: any) => {
     // Set the auth token for RLS (for operations that need user context)
     supabase.auth.setSession({ access_token: authToken, refresh_token: '' });
 
-    const { 
-      action, 
-      child_id, 
-      game_id, 
-      difficulty, 
-      room_name, 
-      room_code, 
-      friend_ids = [],
-      room_id,
-      request_id,
-      approve,
-      invitation_id,
-      total_questions
-    } = await req.json();
+    let bodyJson: any = null;
+    try {
+      bodyJson = await req.json();
+    } catch (e) {
+      console.error('manage-game-rooms: invalid JSON body', e);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid JSON body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log('Received request:', { action, child_id, game_id, room_code });
+    // Log the raw parsed body so we can see what the client actually sent
+    console.log('manage-game-rooms: parsed bodyJson:', bodyJson);
+
+    // Support a few common shapes in case the client wrapped the payload.
+    const action = (bodyJson?.action ?? bodyJson?.body?.action ?? bodyJson?.payload?.action ?? '') as string;
+    const child_id = bodyJson?.child_id ?? bodyJson?.childId ?? bodyJson?.body?.child_id ?? null;
+    const game_id = bodyJson?.game_id ?? bodyJson?.gameId ?? null;
+    const difficulty = bodyJson?.difficulty ?? null;
+    const room_name = bodyJson?.room_name ?? null;
+    const room_code = bodyJson?.room_code ?? null;
+    const friend_ids = bodyJson?.friend_ids ?? bodyJson?.friendIds ?? [];
+    const room_id = bodyJson?.room_id ?? bodyJson?.roomId ?? null;
+    const request_id = bodyJson?.request_id ?? bodyJson?.requestId ?? null;
+    const approve = typeof bodyJson?.approve !== 'undefined' ? bodyJson.approve : null;
+    const invitation_id = bodyJson?.invitation_id ?? bodyJson?.invitationId ?? null;
+    const total_questions = bodyJson?.total_questions ?? bodyJson?.totalQuestions ?? null;
+
+    console.log('manage-game-rooms: Received request:', { action, child_id, game_id, room_code, room_id });
 
     switch (action) {
       case 'create_room':
@@ -546,6 +563,7 @@ serve(async (req: any) => {
         // then set the room status to 'finished' so realtime notifies all clients.
 
         {
+          console.log('manage-game-rooms: mark_player_finished called', { room_id, child_id, total_questions });
           if (!room_id) {
             return new Response(JSON.stringify({ success: false, error: 'room_id required' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
           }
@@ -585,6 +603,8 @@ serve(async (req: any) => {
             .select('id, total_questions')
             .eq('room_id', room_id);
 
+          console.log('manage-game-rooms: fetched multiplayer_game_scores rows for room', room_id, (scoreRows || []).map((r:any) => ({ id: r.id, total_questions: r.total_questions })));
+
           // Get participant count
           const { data: participants } = await supabaseServiceRole
             .from('room_participants')
@@ -592,8 +612,10 @@ serve(async (req: any) => {
             .eq('room_id', room_id);
 
           const required = Number(total_questions) || 10;
+          console.log('manage-game-rooms: required total_questions used for finish check', required);
           const finishedCount = (scoreRows || []).filter((r: any) => (r.total_questions ?? 0) >= required).length;
           const participantCount = (participants || []).length;
+          console.log('manage-game-rooms: finishedCount, participantCount', { finishedCount, participantCount });
 
           let allFinished = false;
           if (participantCount > 0 && finishedCount >= participantCount) {
