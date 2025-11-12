@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/contexts/Auth0Context";
 import { useProgress } from "@/contexts/ProgressContext";
 import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
 import GameRoomPanel from "@/components/Multiplayer/GameRoomPanel";
 import { AppHeader } from "@/components/Navigation/AppHeader";
 import riddlesData from "@/config/riddles.json";
@@ -60,8 +59,7 @@ const RiddleGame = () => {
   const [finalPlayerScore, setFinalPlayerScore] = useState<number | null>(null);
   const [showNewPlayerDialog, setShowNewPlayerDialog] = useState(false);
   const [newPlayerInfo, setNewPlayerInfo] = useState<Player | null>(null);
-  // incoming rematch request state for showing a popup/modal
-  const [incomingRematch, setIncomingRematch] = useState<any | null>(null);
+  // (rematch / "play again" feature removed)
 
   const gameEndedRef = useRef(false);
   const scoreboardPollRef = useRef<number | null>(null);
@@ -607,9 +605,7 @@ const RiddleGame = () => {
   const handleNewPlayerResponse = (restart: boolean) => {
     if (newPlayerInfo) {
       setPlayersSafe(prev => [...prev, newPlayerInfo]);
-      if (restart) {
-        handlePlayAgain();
-      }
+      // Rematch / "Play Again" logic removed — do not trigger a rematch when a new player joins
     }
     setShowNewPlayerDialog(false);
     setNewPlayerInfo(null);
@@ -934,140 +930,14 @@ const RiddleGame = () => {
     });
   };
 
-  const handlePlayAgain = async () => {
-    // Multiplayer: send a rematch request to the room and wait for others to accept
-    if (currentRoomId) {
-      try {
-        const payload = {
-          requester_child_id: selectedChild?.id ?? null,
-          requester_name: selectedChild?.name ?? 'Player',
-          requested_at: new Date().toISOString(),
-          room_id: currentRoomId
-        } as any;
+  // Rematch / "Play Again" feature removed: handlePlayAgain no longer exists
 
-        const { data: upData, error: upError, status: upStatus } = await supabase
-          .from('game_rooms')
-          .update({ play_again_request: payload } as any)
-          .eq('id', currentRoomId)
-          .select()
-          .maybeSingle();
-
-        if (upError) {
-          console.error('Supabase update error (play_again_request):', upError, upStatus, upData);
-          toast({ title: 'Rematch error', description: upError.message || 'Failed to request rematch.' });
-        } else {
-          // success — set a local waiting flag so this client doesn't start the game
-          // until another player accepts the request.
-          waitingForRematchResponseRef.current = true;
-          console.log('play again requested payload', payload, 'updateResult', upData);
-          toast({ title: 'Rematch requested', description: 'Waiting for other players to accept the rematch.' });
-        }
-      } catch (e) {
-        console.error('Failed to request rematch', e);
-        toast({ title: 'Error', description: 'Could not request rematch.' });
-      }
-      return;
-    }
-
-    // Single-player or fallback: local reset
-    gameEndedRef.current = false;
-    setCurrentRiddleIndex(0);
-    setSelectedAnswer(null);
-    setShowFeedback(false);
-
-    // Reset scores but keep players
-    setPlayersSafe(prev => prev.map(p => ({ ...p, score: 0, attempts: 0 })));
-
-    // Go directly to countdown/playing phase, restart game timer
-    setGamePhase('playing');
-    startGameTimer();
-  };
-
-  const acceptPlayAgain = async (req?: any) => {
-    // When a player accepts a rematch, we should NOT immediately flip the room status to playing
-    // from the acceptor's client. Instead, write a response into the room's play_again_request
-    // so the requester receives the response and can start the rematch (authoritatively).
-    if (!currentRoomId) return;
-    try {
-      const request = req ?? incomingRematch;
-      if (!request) {
-        toast({ title: 'No rematch request', description: 'Nothing to accept.' });
-        return;
-      }
-
-      const response = {
-        responder_child_id: selectedChild?.id ?? null,
-        responder_name: selectedChild?.name ?? 'Player',
-        decision: 'accepted',
-        responded_at: new Date().toISOString()
-      } as any;
-
-      const newPayload = { ...request, response };
-
-      const _playReqPayload: any = { play_again_request: newPayload };
-      const { data, error } = await supabase
-        .from('game_rooms')
-        .update(_playReqPayload)
-        .eq('id', currentRoomId)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        console.error('acceptPlayAgain update error', error);
-        toast({ title: 'Failed', description: 'Could not send accept response.' });
-        return;
-      }
-
-      // Let the requester observe this response and start the rematch for all players
-      toast({ title: 'Rematch accepted', description: 'Waiting for the host to start the rematch.' });
-    } catch (e) {
-      console.error('acceptPlayAgain failed', e);
-      toast({ title: 'Error', description: 'Failed to accept rematch.' });
-    }
-  };
-
-  const declinePlayAgain = async (req: any) => {
-    if (!currentRoomId) return;
-    try {
-      const response = {
-        responder_child_id: selectedChild?.id ?? null,
-        responder_name: selectedChild?.name ?? 'Player',
-        decision: 'rejected',
-        responded_at: new Date().toISOString()
-      } as any;
-
-      const newPayload = { ...req, response };
-
-      const _playReqPayload2: any = { play_again_request: newPayload };
-      const { data, error } = await supabase
-        .from('game_rooms')
-        .update(_playReqPayload2)
-        .eq('id', currentRoomId)
-        .select()
-        .maybeSingle();
-
-      if (error) {
-        console.error('declinePlayAgain update error', error);
-        toast({ title: 'Failed', description: 'Could not send decline response.' });
-        return;
-      }
-
-      // Notify local user they declined
-      toast({ title: 'Rematch declined', description: 'You declined the rematch.' });
-    } catch (e) {
-      console.error('declinePlayAgain failed', e);
-      toast({ title: 'Error', description: 'Failed to decline rematch.' });
-    }
-  };
+  // Rematch accept/decline handlers removed
   const handleJoinRequestUpdate = (requestCount: number) => {
     setPendingJoinRequests(requestCount);
   };
 
-  // Track last seen play_again_request to avoid duplicate toasts
-  const lastPlayRequestRef = useRef<string | null>(null);
-  // When this client requests a rematch, set this flag so we don't react to any
-  // premature room.status='playing' updates until a responder has accepted.
-  const waitingForRematchResponseRef = useRef<boolean>(false);
+  // Rematch / "play again" tracking removed
 
   // Cleanup any temporary room subscriptions created by loadRoomData
   useEffect(() => {
@@ -1133,35 +1003,9 @@ const RiddleGame = () => {
           playerProgressRef.current = rec.player_progress;
         }
 
-        // Only transition to countdown when server sets status='playing'
+              // Only transition to countdown when server sets status='playing'
             if (rec.status === 'playing') {
-              // If there is an unresolved play_again_request, recipients should NOT
-              // start the game just because status='playing' was written; only the
-              // requester should authoritatively start after seeing an accept.
-              try {
-                const pr = (rec.play_again_request as any) || null;
-                if (pr && !(pr.response && pr.response.responder_child_id)) {
-                  // If current client is NOT the requester, ignore the status update.
-                  if (pr.requester_child_id !== (selectedChild?.id)) {
-                    return;
-                  }
-                  // If current client is the requester, fall through — we still
-                  // gate using waitingForRematchResponseRef below.
-                }
-              } catch (_) { /* ignore and proceed */ }
-
-              // If we requested a rematch locally and are still waiting for another
-              // player's response, ignore any premature status='playing' updates
-              // that arrive while the play_again_request is still present.
-              try {
-                if (waitingForRematchResponseRef.current) {
-                  const pr = rec.play_again_request as any;
-                  if (pr && pr.requester_child_id === (selectedChild?.id) && !(pr.response && pr.response.responder_child_id)) {
-                    // still waiting for response — do not start yet
-                    return;
-                  }
-                }
-              } catch (_) { /* ignore and proceed */ }
+              // (rematch / play-again gating removed)
               // Rematch / new game started on server: ensure local state is fully reset
               try {
                 // clear any running timers to avoid leftover timers from previous game
@@ -1195,104 +1039,7 @@ const RiddleGame = () => {
           finalizeGame().catch((e) => console.error('Failed to finalize on room finished update', e));
         }
 
-        // If a play-again request was posted by someone, show a toast + popup to other players
-        if (rec.play_again_request) {
-          try {
-            const req = rec.play_again_request as any;
-            const key = `${req.requester_child_id || 'anon'}::${req.requested_at || ''}`;
-            // avoid showing the same toast/modal multiple times
-            if (lastPlayRequestRef.current === key) return;
-            lastPlayRequestRef.current = key;
-
-            // If the play_again_request already contains a response, handle it specially
-            if (req.response && req.response.responder_child_id) {
-              // If current client is the requester, handle responder decision
-              if (req.requester_child_id === (selectedChild?.id)) {
-                const decision = (req.response && req.response.decision) || 'rejected';
-                const responderName = req.response?.responder_name || 'Player';
-
-                if (decision === 'accepted') {
-                  // The responder accepted: requester should initialize DB scores and mark room playing
-                  // We're no longer waiting for a response.
-                  waitingForRematchResponseRef.current = false;
-                  toast({ title: `${responderName} accepted your rematch`, description: 'Starting new game…' });
-                  (async () => {
-                    try {
-                      // Re-initialize scores and then set status to playing
-                      await initializeGameScores(rec.id, playersRef.current || players);
-
-                      const updatePayload: any = { play_again_request: null, status: 'playing' };
-                      if (rec.selected_category) updatePayload.selected_category = rec.selected_category;
-
-                      await supabase
-                        .from('game_rooms')
-                        .update(updatePayload)
-                        .eq('id', rec.id);
-                    } catch (e) {
-                      console.error('Failed to start rematch after accept response', e);
-                      // still clear the request to avoid stuck UI
-                      try { await supabase.from('game_rooms').update({ play_again_request: null } as any).eq('id', rec.id); } catch (_) { /* ignore */ }
-                    }
-                  })();
-                } else {
-                  // Rejected — notify requester and clear the request
-                  waitingForRematchResponseRef.current = false;
-                  toast({ title: `${responderName} declined your rematch`, description: 'They chose not to play again.' });
-                  (async () => {
-                    try {
-                      await supabase
-                        .from('game_rooms')
-                        .update({ play_again_request: null } as any)
-                        .eq('id', rec.id);
-                    } catch (e) {
-                      console.error('Failed to clear play_again_request after rejection', e);
-                    }
-                  })();
-                }
-              }
-
-              // Don't show the incoming rematch modal for response payloads
-              return;
-            }
-
-            // if this client is NOT the requester, show an accept/reject toast and modal
-            if (req.requester_child_id !== (selectedChild?.id)) {
-              // set modal state so a pop-up appears on screen
-              setIncomingRematch(req);
-              const t = toast({
-                title: `${req.requester_name || 'Player'} wants a rematch!`,
-                description: 'Join the rematch with a fresh game — Play or Reject.',
-                action: (
-                  <>
-                    <ToastAction altText="Accept rematch" onClick={() => {
-                      try { t.dismiss(); } catch (_) {}
-                      setIncomingRematch(null);
-                      acceptPlayAgain();
-                    }}>
-                      Play
-                    </ToastAction>
-                    <ToastAction altText="Reject rematch" onClick={() => {
-                      try { t.dismiss(); } catch (_) {}
-                      setIncomingRematch(null);
-                      declinePlayAgain(req);
-                    }}>
-                      Reject
-                    </ToastAction>
-                  </>
-                )
-              });
-            } else {
-              // requester sees a confirmation toast
-              toast({ title: 'Rematch requested', description: 'Waiting for other players to accept.' });
-            }
-          } catch (e) {
-            console.error('Failed to handle play_again_request realtime', e);
-          }
-        } else {
-          // when play_again_request cleared on room, reset dedupe key and modal state so future requests show
-          lastPlayRequestRef.current = null;
-          setIncomingRematch(null);
-        }
+        /* rematch / "play again" realtime handling removed */
       })
       .subscribe();
 
@@ -1303,81 +1050,7 @@ const RiddleGame = () => {
   // update for play_again_request. To make delivery more resilient, poll the
   // room row a few times shortly after joining/loading the room and when the
   // component mounts. This is low-cost and only runs for a short window.
-  useEffect(() => {
-    if (!currentRoomId) return;
-
-    let cancelled = false;
-    let attempts = 0;
-
-    const pollOnce = async () => {
-      try {
-        const { data } = await supabase
-          .from('game_rooms')
-          .select('id')
-          .eq('id', currentRoomId)
-          .maybeSingle();
-  
-        if (!data || cancelled) return;
-  
-        // Check if play_again_request exists in the data
-        const playAgainRequest = (data as any).play_again_request;
-        if (!playAgainRequest) return;
-  
-        const req = playAgainRequest as any;
-        const key = `${req.requester_child_id || 'anon'}::${req.requested_at || ''}`;
-        if (lastPlayRequestRef.current === key) return;
-        lastPlayRequestRef.current = key;
-
-        // If there's already a response, let the existing realtime handler deal with it
-        if (req.response && req.response.responder_child_id) return;
-
-        // If current client is NOT the requester, show accept/reject UI
-        if (req.requester_child_id !== (selectedChild?.id)) {
-          setIncomingRematch(req);
-          const t = toast({
-            title: `${req.requester_name || 'Player'} wants a rematch!`,
-            description: 'Join the rematch with a fresh game — Play or Reject.',
-            action: (
-              <>
-                <ToastAction altText="Accept rematch" onClick={() => {
-                  try { t.dismiss(); } catch (_) {}
-                  setIncomingRematch(null);
-                  acceptPlayAgain(req);
-                }}>
-                  Play
-                </ToastAction>
-                <ToastAction altText="Reject rematch" onClick={() => {
-                  try { t.dismiss(); } catch (_) {}
-                  setIncomingRematch(null);
-                  declinePlayAgain(req);
-                }}>
-                  Reject
-                </ToastAction>
-              </>
-            )
-          });
-        }
-      } catch (e) {
-        // ignore poll errors
-      }
-    };
-
-    // Run a few short polls over ~6 seconds
-    const interval = window.setInterval(async () => {
-      if (cancelled) return;
-      attempts += 1;
-      await pollOnce();
-      if (attempts >= 4) {
-        cancelled = true;
-        clearInterval(interval);
-      }
-    }, 1500);
-
-    // initial immediate poll
-    pollOnce();
-
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [currentRoomId, selectedChild?.id]);
+  // Poll fallback for play_again_request removed
 
   // Sync multiplayer scores in realtime so everyone sees updated scores as answers are recorded
   useEffect(() => {
@@ -1828,13 +1501,6 @@ const RiddleGame = () => {
 
             <div className="space-y-3">
               <Button
-                onClick={handlePlayAgain}
-                className="w-full bg-primary hover:bg-primary/90 text-white"
-                size="lg"
-              >
-                Play Again 🔄
-              </Button>
-              <Button
                 onClick={() => navigate('/games')}
                 variant="outline"
                 className="w-full border-input hover:bg-secondary/10"
@@ -2068,15 +1734,7 @@ const RiddleGame = () => {
 
             {/* Game Control Buttons */}
             <div className="flex justify-center space-x-3 mt-6">
-              {isRoomCreator && roomCode && (
-                <Button
-                  onClick={handlePlayAgain}
-                  className="bg-green-500 hover:bg-green-600 text-white"
-                  size="sm"
-                >
-                  🔄 Restart Game
-                </Button>
-              )}
+              {/* Restart Game control removed (rematch feature deleted) */}
               <Button
                 onClick={() => navigate('/games')}
                 variant="outline"
