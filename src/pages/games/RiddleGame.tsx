@@ -1155,6 +1155,67 @@ const RiddleGame = () => {
     startCountdown();
   };
 
+  const handlePlayAgain = async () => {
+    // Reset game state and restart in the same room
+    try {
+      // Reset timers and intervals
+      gameEndedRef.current = false;
+      clearIntervalRef(countdownTimerRef);
+      clearIntervalRef(gameTimerRef);
+      clearTimeoutRef(fallbackTimeoutRef);
+      clearTimeoutRef(feedbackTimeoutRef);
+      clearIntervalRef(scoreboardPollRef);
+
+      // Reset game state
+      setCurrentRiddleIndex(0);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+      setFinalPlayersSnapshot(null);
+      setFinalPlayerScore(null);
+      setGameTimer(0);
+
+      // Reset player scores
+      setPlayersSafe(prev => prev.map(p => ({ ...p, score: 0, attempts: 0, streak: 0 })));
+
+      if (roomCode && currentRoomId) {
+        // Multiplayer mode: reinitialize scores and update room status
+        try {
+          await initializeGameScores(currentRoomId, playersRef.current);
+          
+          await supabase
+            .from('game_rooms')
+            .update({ status: 'playing' })
+            .eq('room_code', roomCode);
+
+          toast({ 
+            title: 'Restarting game...', 
+            description: 'Get ready for another round!'
+          });
+        } catch (e) {
+          console.error('Failed to reset multiplayer room:', e);
+          toast({ 
+            title: 'Error', 
+            description: 'Failed to restart the game. Please try again.',
+            variant: 'destructive'
+          });
+          return;
+        }
+      }
+
+      // Go back to theme selection or countdown
+      setGamePhase('countdown');
+      setWaitingForPlayers(false);
+      startCountdown();
+    } catch (e) {
+      console.error('Failed to restart game:', e);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to restart the game. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -1500,6 +1561,13 @@ const RiddleGame = () => {
             </div>
 
             <div className="space-y-3">
+              <Button
+                onClick={handlePlayAgain}
+                className="w-full bg-primary hover:bg-primary/90"
+                size="lg"
+              >
+                🔄 Play Again
+              </Button>
               <Button
                 onClick={() => navigate('/games')}
                 variant="outline"
