@@ -4,7 +4,7 @@
     "title": "Riddle Time! 🤔",
     "icon": "❓",
     "enabled": true,
-    "difficulties": ["easy1", "medium", "hard"],
+    "difficulties": ["easy", "medium", "hard"],
     "dataSource": "local:riddles.json",
     "scoring": {
       "correct": 1,
