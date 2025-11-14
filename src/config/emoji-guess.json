@@ -1,0 +1,30 @@
+[
+  {
+    "id": "eg_easy_1",
+    "difficulty": "easy",
+    "emojis": "🍎",
+    "answer": "apple",
+    "hint": "A red fruit often found in lunchboxes"
+  },
+  {
+    "id": "eg_easy_2",
+    "difficulty": "easy",
+    "emojis": "🐘",
+    "answer": "elephant",
+    "hint": "The largest land animal"
+  },
+  {
+    "id": "eg_medium_1",
+    "difficulty": "medium",
+    "emojis": "🌧️☔",
+    "answer": "rainy day",
+    "hint": "Weather with water falling from the sky"
+  },
+  {
+    "id": "eg_hard_1",
+    "difficulty": "hard",
+    "emojis": "🚀🌕",
+    "answer": "moon landing",
+    "hint": "Historic event involving space travel"
+  }
+]

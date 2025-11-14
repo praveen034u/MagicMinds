@@ -1,0 +1,30 @@
+[
+  {
+    "id": "ws_easy_1",
+    "difficulty": "easy",
+    "scrambled": "tca",
+    "answer": "cat",
+    "hint": "A common pet that says 'meow'"
+  },
+  {
+    "id": "ws_easy_2",
+    "difficulty": "easy",
+    "scrambled": "god",
+    "answer": "dog",
+    "hint": "A loyal animal that barks"
+  },
+  {
+    "id": "ws_medium_1",
+    "difficulty": "medium",
+    "scrambled": "rtewa",
+    "answer": "water",
+    "hint": "You drink it every day"
+  },
+  {
+    "id": "ws_hard_1",
+    "difficulty": "hard",
+    "scrambled": "rteocmup",
+    "answer": "computer",
+    "hint": "A device you use to code"
+  }
+]

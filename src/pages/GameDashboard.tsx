@@ -120,9 +120,9 @@ const GameDashboard = () => {
               <JoinRequestButton className="bg-white/80 hover:bg-white text-primary border-2 border-primary/30" />
             </div>
 
-            <div className="flex justify-center">
-              {enabledGames.map((game) => (
-                <Card key={game.id} className="bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 max-w-md w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center items-start">
+              {enabledGames.slice(0, Math.ceil(enabledGames.length / 2)).map((game) => (
+                <Card key={game.id} className="bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 max-w-md w-full mx-auto">
                   <CardHeader className="text-center pb-4">
                     <div className="text-4xl mb-2">{game.icon}</div>
                     <CardTitle className="text-xl font-fredoka text-primary">
@@ -155,7 +155,63 @@ const GameDashboard = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+                    {/* Game Action Buttons */}
+                    <div className="space-y-2">
+                      <Button 
+                        onClick={() => handlePlayGame(game.id, false)}
+                        className="w-full bg-primary hover:bg-primary/90 text-white"
+                        size="lg"
+                      >
+                        Play Solo 🚀
+                      </Button>
+                      <Button 
+                        onClick={() => handlePlayGame(game.id, true)}
+                        variant="outline"
+                        className="w-full border-secondary text-secondary hover:bg-secondary/10"
+                        size="lg"
+                      >
+                        Play with Friends 👥
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 justify-center items-start mt-8">
+              {enabledGames.slice(Math.ceil(enabledGames.length / 2)).map((game) => (
+                <Card key={game.id} className="bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 max-w-md w-full mx-auto">
+                  <CardHeader className="text-center pb-4">
+                    <div className="text-4xl mb-2">{game.icon}</div>
+                    <CardTitle className="text-xl font-fredoka text-primary">
+                      {game.title}
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground">
+                      Test your skills and earn stars!
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                        Difficulty Level
+                      </label>
+                      <Select
+                        value={selectedDifficulties[game.id] || 'easy'}
+                        onValueChange={(value) => 
+                          setSelectedDifficulties(prev => ({ ...prev, [game.id]: value }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {game.difficulties.map((difficulty) => (
+                            <SelectItem key={difficulty} value={difficulty}>
+                              <span className="capitalize">{difficulty}</span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     {/* Game Action Buttons */}
                     <div className="space-y-2">
                       <Button 

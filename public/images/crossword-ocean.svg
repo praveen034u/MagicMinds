@@ -1,0 +1,78 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background - ocean gradient -->
+  <defs>
+    <linearGradient id="oceanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#dbeafe;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="300" height="300" fill="url(#oceanGradient)"/>
+  
+  <!-- Waves -->
+  <g opacity="0.3">
+    <path d="M0,220 Q75,210 150,220 T300,220 L300,300 L0,300 Z" fill="#0284c7"/>
+    <path d="M0,240 Q75,230 150,240 T300,240 L300,300 L0,300 Z" fill="#0369a1"/>
+  </g>
+  
+  <!-- Bubbles -->
+  <g opacity="0.4">
+    <circle cx="40" cy="180" r="5" fill="white"/>
+    <circle cx="260" cy="200" r="4" fill="white"/>
+    <circle cx="80" cy="240" r="3" fill="white"/>
+    <circle cx="220" cy="230" r="6" fill="white"/>
+  </g>
+  
+  <!-- Crossword Grid -->
+  <g transform="translate(75, 40)">
+    <!-- Grid background -->
+    <rect width="150" height="150" fill="white" stroke="#334155" stroke-width="3"/>
+    
+    <!-- Grid lines - 5x5 -->
+    <line x1="0" y1="30" x2="150" y2="30" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="60" x2="150" y2="60" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="90" x2="150" y2="90" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="120" x2="150" y2="120" stroke="#cbd5e1" stroke-width="1"/>
+    
+    <line x1="30" y1="0" x2="30" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="60" y1="0" x2="60" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="90" y1="0" x2="90" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="120" y1="0" x2="120" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    
+    <!-- Black cells for decoration -->
+    <rect x="90" y="0" width="30" height="30" fill="#1e293b"/>
+    <rect x="0" y="90" width="30" height="30" fill="#1e293b"/>
+    <rect x="120" y="120" width="30" height="30" fill="#1e293b"/>
+    
+    <!-- Letters -->
+    <text x="15" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0369a1" text-anchor="middle">F</text>
+    <text x="45" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0369a1" text-anchor="middle">I</text>
+    <text x="75" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0369a1" text-anchor="middle">S</text>
+    <text x="105" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#0369a1" text-anchor="middle">H</text>
+    
+    <text x="45" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#06b6d4" text-anchor="middle">W</text>
+    <text x="75" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#06b6d4" text-anchor="middle">A</text>
+    <text x="105" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#06b6d4" text-anchor="middle">V</text>
+    <text x="135" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#06b6d4" text-anchor="middle">E</text>
+    
+    <!-- Cell numbers -->
+    <text x="3" y="12" font-family="Arial, sans-serif" font-size="8" fill="#64748b">1</text>
+    <text x="33" y="42" font-family="Arial, sans-serif" font-size="8" fill="#64748b">2</text>
+  </g>
+  
+  <!-- Fish decoration -->
+  <g transform="translate(250, 80)">
+    <ellipse cx="0" cy="0" rx="15" ry="8" fill="#f97316"/>
+    <polygon points="12,0 20,-5 20,5" fill="#f97316"/>
+    <circle cx="-8" cy="-2" r="2" fill="white"/>
+    <circle cx="-8" cy="-2" r="1" fill="black"/>
+  </g>
+  
+  <!-- Starfish decoration -->
+  <g transform="translate(40, 260)">
+    <polygon points="0,-8 -2,-2 -8,-2 -3,2 -5,8 0,4 5,8 3,2 8,-2 2,-2" fill="#f59e0b"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="150" y="250" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#0369a1" text-anchor="middle">Ocean</text>
+  <text x="150" y="270" font-family="Arial, sans-serif" font-size="14" fill="#06b6d4" text-anchor="middle">Crossword Puzzle</text>
+</svg>

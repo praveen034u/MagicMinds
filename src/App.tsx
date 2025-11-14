@@ -16,7 +16,7 @@ import GameDashboard from "./pages/GameDashboard";
 import StoryDashboard from "./pages/StoryDashboard";
 import StoryViewer from "./pages/StoryViewer";
 import ProgressRewards from "./pages/ProgressRewards";
-import RiddleGame from "./pages/games/RiddleGame";
+import GameRouter from "./pages/GameRouter";
 import NotFound from "./pages/NotFound";
 import VoicePricingPlans from "./pages/VoicePricingPlans";
 import PaymentPage from "./pages/Payment";
@@ -46,7 +46,7 @@ const App = () => (
              <Route path="/stories" element={<ProtectedRoute><StoryDashboard /></ProtectedRoute>} />
              <Route path="/story-viewer" element={<ProtectedRoute><StoryViewer /></ProtectedRoute>} />
              <Route path="/progress" element={<ProtectedRoute><ProgressRewards /></ProtectedRoute>} />
-             <Route path="/games/:gameId" element={<ProtectedRoute><RiddleGame /></ProtectedRoute>} />
+             <Route path="/games/:gameId" element={<ProtectedRoute><GameRouter /></ProtectedRoute>} />
              <Route path="/pricing" element={<ProtectedRoute><VoicePricingPlans /></ProtectedRoute>} />
              <Route path="/payment" element={<ProtectedRoute><PaymentPage /></ProtectedRoute>} />
              

@@ -1,0 +1,646 @@
+{
+  "Christmas": {
+    "easy": {
+      "gridSize": 10,
+      "words": [
+        {
+          "id": 1,
+          "word": "SANTA",
+          "clue": "He brings gifts on Christmas Eve",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "TREE",
+          "clue": "We decorate it with lights and ornaments",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 4,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "GIFT",
+          "clue": "A present wrapped with a bow",
+          "direction": "across",
+          "startRow": 2,
+          "startCol": 0,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "STAR",
+          "clue": "Shiny decoration on top of the tree",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 5,
+          "word": "ELF",
+          "clue": "Santa's little helper",
+          "direction": "across",
+          "startRow": 4,
+          "startCol": 2,
+          "number": 5
+        }
+      ]
+    },
+    "medium": {
+      "gridSize": 12,
+      "words": [
+        {
+          "id": 1,
+          "word": "REINDEER",
+          "clue": "One of Santa's animals that pulls the sleigh",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "DECEMBER",
+          "clue": "Christmas month",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 5,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "ELVES",
+          "clue": "Santa's helpers (plural)",
+          "direction": "across",
+          "startRow": 2,
+          "startCol": 0,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "GRINCH",
+          "clue": "Green character who hates Christmas",
+          "direction": "down",
+          "startRow": 2,
+          "startCol": 0,
+          "number": 3
+        },
+        {
+          "id": 5,
+          "word": "CHIMNEY",
+          "clue": "Santa comes down this",
+          "direction": "across",
+          "startRow": 5,
+          "startCol": 2,
+          "number": 5
+        },
+        {
+          "id": 6,
+          "word": "PRESENTS",
+          "clue": "Gifts under the tree",
+          "direction": "down",
+          "startRow": 3,
+          "startCol": 7,
+          "number": 6
+        },
+        {
+          "id": 7,
+          "word": "SNOWMAN",
+          "clue": "Made of snow with a carrot nose",
+          "direction": "across",
+          "startRow": 8,
+          "startCol": 1,
+          "number": 7
+        }
+      ]
+    },
+    "hard": {
+      "gridSize": 15,
+      "words": [
+        {
+          "id": 1,
+          "word": "ORNAMENT",
+          "clue": "Decorative ball hanging on the tree",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "MISTLETOE",
+          "clue": "Plant you kiss under at Christmas",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 4,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "WORKSHOP",
+          "clue": "Where Santa makes toys",
+          "direction": "across",
+          "startRow": 3,
+          "startCol": 0,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "STOCKING",
+          "clue": "Hangs by the fireplace for small gifts",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 5,
+          "word": "WREATH",
+          "clue": "Circular decoration on the door",
+          "direction": "across",
+          "startRow": 6,
+          "startCol": 2,
+          "number": 5
+        },
+        {
+          "id": 6,
+          "word": "NORTHPOLE",
+          "clue": "Where Santa lives",
+          "direction": "down",
+          "startRow": 5,
+          "startCol": 7,
+          "number": 6
+        },
+        {
+          "id": 7,
+          "word": "JINGLEBELLS",
+          "clue": "Famous Christmas song",
+          "direction": "across",
+          "startRow": 10,
+          "startCol": 1,
+          "number": 7
+        }
+      ]
+    }
+  },
+  "Animals": {
+    "easy": {
+      "gridSize": 10,
+      "words": [
+        {
+          "id": 1,
+          "word": "DOG",
+          "clue": "Man's best friend, barks",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "DUCK",
+          "clue": "Yellow bird that quacks",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 3,
+          "word": "CAT",
+          "clue": "Pet that says meow",
+          "direction": "across",
+          "startRow": 2,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "OWL",
+          "clue": "Wise bird that hoots at night",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 2,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "BEE",
+          "clue": "Buzzing insect that makes honey",
+          "direction": "across",
+          "startRow": 4,
+          "startCol": 0,
+          "number": 5
+        }
+      ]
+    },
+    "medium": {
+      "gridSize": 12,
+      "words": [
+        {
+          "id": 1,
+          "word": "ELEPHANT",
+          "clue": "Largest land animal with a trunk",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "TIGER",
+          "clue": "Big striped cat from jungle",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 2,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "GIRAFFE",
+          "clue": "Tallest animal with long neck",
+          "direction": "across",
+          "startRow": 3,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "MONKEY",
+          "clue": "Swings in trees, loves bananas",
+          "direction": "down",
+          "startRow": 2,
+          "startCol": 5,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "PENGUIN",
+          "clue": "Black and white bird that can't fly",
+          "direction": "across",
+          "startRow": 6,
+          "startCol": 0,
+          "number": 5
+        }
+      ]
+    },
+    "hard": {
+      "gridSize": 15,
+      "words": [
+        {
+          "id": 1,
+          "word": "RHINOCEROS",
+          "clue": "Large animal with horn on nose",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "CHEETAH",
+          "clue": "Fastest land animal",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 3,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "KANGAROO",
+          "clue": "Australian animal that hops",
+          "direction": "across",
+          "startRow": 4,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "OCTOPUS",
+          "clue": "Sea creature with eight arms",
+          "direction": "down",
+          "startRow": 3,
+          "startCol": 6,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "BUTTERFLY",
+          "clue": "Colorful insect with wings",
+          "direction": "across",
+          "startRow": 8,
+          "startCol": 2,
+          "number": 5
+        }
+      ]
+    }
+  },
+  "Space": {
+    "easy": {
+      "gridSize": 10,
+      "words": [
+        {
+          "id": 1,
+          "word": "MOON",
+          "clue": "Shines at night in the sky",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "MARS",
+          "clue": "The red planet",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 3,
+          "word": "SUN",
+          "clue": "Bright star that gives us light",
+          "direction": "across",
+          "startRow": 2,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "STAR",
+          "clue": "Twinkles in the night sky",
+          "direction": "down",
+          "startRow": 2,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 5,
+          "word": "UFO",
+          "clue": "Alien spaceship",
+          "direction": "across",
+          "startRow": 5,
+          "startCol": 2,
+          "number": 5
+        }
+      ]
+    },
+    "medium": {
+      "gridSize": 12,
+      "words": [
+        {
+          "id": 1,
+          "word": "ROCKET",
+          "clue": "Vehicle that flies to space",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "PLANET",
+          "clue": "Earth is one of these",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 4,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "ASTRONAUT",
+          "clue": "Person who travels to space",
+          "direction": "across",
+          "startRow": 3,
+          "startCol": 0,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "GALAXY",
+          "clue": "Collection of billions of stars",
+          "direction": "down",
+          "startRow": 2,
+          "startCol": 6,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "METEOR",
+          "clue": "Shooting star",
+          "direction": "across",
+          "startRow": 7,
+          "startCol": 1,
+          "number": 5
+        }
+      ]
+    },
+    "hard": {
+      "gridSize": 15,
+      "words": [
+        {
+          "id": 1,
+          "word": "SATELLITE",
+          "clue": "Device orbiting Earth",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "TELESCOPE",
+          "clue": "Tool to see far into space",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 5,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "NEBULA",
+          "clue": "Cloud of gas and dust in space",
+          "direction": "across",
+          "startRow": 4,
+          "startCol": 2,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "ASTEROID",
+          "clue": "Rocky object floating in space",
+          "direction": "down",
+          "startRow": 3,
+          "startCol": 7,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "BLACKHOLE",
+          "clue": "Nothing can escape its gravity",
+          "direction": "across",
+          "startRow": 9,
+          "startCol": 1,
+          "number": 5
+        }
+      ]
+    }
+  },
+  "Ocean": {
+    "easy": {
+      "gridSize": 10,
+      "words": [
+        {
+          "id": 1,
+          "word": "FISH",
+          "clue": "Swims in water",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "WAVE",
+          "clue": "Moving water in the ocean",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 2,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "CRAB",
+          "clue": "Has claws and walks sideways",
+          "direction": "across",
+          "startRow": 2,
+          "startCol": 0,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "SAND",
+          "clue": "Found on the beach",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 5,
+          "word": "SEAL",
+          "clue": "Playful ocean mammal",
+          "direction": "across",
+          "startRow": 4,
+          "startCol": 1,
+          "number": 5
+        }
+      ]
+    },
+    "medium": {
+      "gridSize": 12,
+      "words": [
+        {
+          "id": 1,
+          "word": "DOLPHIN",
+          "clue": "Smart ocean mammal that jumps",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "CORAL",
+          "clue": "Colorful reef in the ocean",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 3,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "TURTLE",
+          "clue": "Slow ocean animal with shell",
+          "direction": "across",
+          "startRow": 3,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "WHALE",
+          "clue": "Largest ocean animal",
+          "direction": "down",
+          "startRow": 2,
+          "startCol": 5,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "OCTOPUS",
+          "clue": "Eight-armed sea creature",
+          "direction": "across",
+          "startRow": 6,
+          "startCol": 0,
+          "number": 5
+        }
+      ]
+    },
+    "hard": {
+      "gridSize": 15,
+      "words": [
+        {
+          "id": 1,
+          "word": "JELLYFISH",
+          "clue": "Transparent ocean creature that stings",
+          "direction": "across",
+          "startRow": 0,
+          "startCol": 0,
+          "number": 1
+        },
+        {
+          "id": 2,
+          "word": "SEAHORSE",
+          "clue": "Tiny fish shaped like a horse",
+          "direction": "down",
+          "startRow": 0,
+          "startCol": 4,
+          "number": 2
+        },
+        {
+          "id": 3,
+          "word": "STARFISH",
+          "clue": "Star-shaped ocean animal",
+          "direction": "across",
+          "startRow": 4,
+          "startCol": 1,
+          "number": 3
+        },
+        {
+          "id": 4,
+          "word": "STINGRAY",
+          "clue": "Flat fish with a tail spike",
+          "direction": "down",
+          "startRow": 3,
+          "startCol": 6,
+          "number": 4
+        },
+        {
+          "id": 5,
+          "word": "SUBMARINE",
+          "clue": "Vehicle that goes underwater",
+          "direction": "across",
+          "startRow": 9,
+          "startCol": 2,
+          "number": 5
+        }
+      ]
+    }
+  }
+}

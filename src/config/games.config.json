@@ -14,6 +14,20 @@
     "theme": "Zoo Animals"
   },
   {
+    "id": "crossword",
+    "title": "Crossword Puzzle 🧩",
+    "icon": "🔤",
+    "enabled": true,
+    "difficulties": ["easy", "medium", "hard"],
+    "dataSource": "local:crosswords.json",
+    "scoring": {
+      "correct": 2,
+      "streakBonus": 1
+    },
+    "description": "Solve the crossword puzzle! Fill in words using the clues provided.",
+    "theme": "Christmas"
+  },
+  {
     "id": "vocabulary",
     "title": "Word Builder 📚",
     "icon": "📝",
@@ -40,5 +54,33 @@
     },
     "description": "Put story events in the right order. Great for understanding story structure!",
     "theme": "Story Order"
-  }
-]
+    },
+    {
+      "id": "word-scramble",
+      "title": "Word Scramble 🌀",
+      "icon": "🔀",
+      "enabled": true,
+      "difficulties": ["easy", "medium", "hard"],
+      "dataSource": "local:word-scramble.json",
+      "scoring": {
+        "correct": 2,
+        "streakBonus": 1
+      },
+      "description": "Unscramble the letters to find the hidden word! Challenge your friends or play solo.",
+      "theme": "Mixed Words"
+    },
+    {
+      "id": "emoji-guess",
+      "title": "Emoji Guess 😃",
+      "icon": "🎉",
+      "enabled": true,
+      "difficulties": ["easy", "medium", "hard"],
+      "dataSource": "local:emoji-guess.json",
+      "scoring": {
+        "correct": 2,
+        "streakBonus": 1
+      },
+      "description": "Guess the word or phrase from the emojis! Fun for all ages.",
+      "theme": "Emoji Puzzles"
+    }
+  ]

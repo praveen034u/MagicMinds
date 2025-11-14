@@ -1,0 +1,61 @@
+<svg width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="300" height="300" fill="#fef3c7"/>
+  
+  <!-- Grass effect -->
+  <rect x="0" y="240" width="300" height="60" fill="#86efac" opacity="0.3"/>
+  
+  <!-- Crossword Grid -->
+  <g transform="translate(75, 60)">
+    <!-- Grid background -->
+    <rect width="150" height="150" fill="white" stroke="#334155" stroke-width="3"/>
+    
+    <!-- Grid lines - 5x5 -->
+    <line x1="0" y1="30" x2="150" y2="30" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="60" x2="150" y2="60" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="90" x2="150" y2="90" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="0" y1="120" x2="150" y2="120" stroke="#cbd5e1" stroke-width="1"/>
+    
+    <line x1="30" y1="0" x2="30" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="60" y1="0" x2="60" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="90" y1="0" x2="90" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    <line x1="120" y1="0" x2="120" y2="150" stroke="#cbd5e1" stroke-width="1"/>
+    
+    <!-- Black cells for decoration -->
+    <rect x="60" y="0" width="30" height="30" fill="#1e293b"/>
+    <rect x="0" y="60" width="30" height="30" fill="#1e293b"/>
+    <rect x="120" y="90" width="30" height="30" fill="#1e293b"/>
+    
+    <!-- Letters -->
+    <text x="15" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#b45309" text-anchor="middle">L</text>
+    <text x="45" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#b45309" text-anchor="middle">I</text>
+    <text x="105" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#b45309" text-anchor="middle">N</text>
+    
+    <text x="45" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#15803d" text-anchor="middle">C</text>
+    <text x="75" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#15803d" text-anchor="middle">A</text>
+    <text x="105" y="52" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#15803d" text-anchor="middle">T</text>
+    
+    <!-- Cell numbers -->
+    <text x="3" y="12" font-family="Arial, sans-serif" font-size="8" fill="#64748b">1</text>
+    <text x="33" y="42" font-family="Arial, sans-serif" font-size="8" fill="#64748b">2</text>
+  </g>
+  
+  <!-- Paw prints decoration -->
+  <g transform="translate(40, 230)">
+    <circle cx="0" cy="0" r="4" fill="#b45309" opacity="0.6"/>
+    <circle cx="-6" cy="-8" r="3" fill="#b45309" opacity="0.6"/>
+    <circle cx="6" cy="-8" r="3" fill="#b45309" opacity="0.6"/>
+    <circle cx="0" cy="-12" r="3" fill="#b45309" opacity="0.6"/>
+  </g>
+  
+  <g transform="translate(260, 240)">
+    <circle cx="0" cy="0" r="4" fill="#b45309" opacity="0.6"/>
+    <circle cx="-6" cy="-8" r="3" fill="#b45309" opacity="0.6"/>
+    <circle cx="6" cy="-8" r="3" fill="#b45309" opacity="0.6"/>
+    <circle cx="0" cy="-12" r="3" fill="#b45309" opacity="0.6"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="150" y="250" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#b45309" text-anchor="middle">Animals</text>
+  <text x="150" y="270" font-family="Arial, sans-serif" font-size="14" fill="#15803d" text-anchor="middle">Crossword Puzzle</text>
+</svg>

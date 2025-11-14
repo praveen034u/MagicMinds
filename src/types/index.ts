@@ -114,6 +114,21 @@ export interface RiddleQuestion {
 
 export type Riddle = RiddleQuestion;
 
+export interface CrosswordWord {
+  id: number;
+  word: string;
+  clue: string;
+  direction: 'across' | 'down';
+  startRow: number;
+  startCol: number;
+  number: number;
+}
+
+export interface CrosswordPuzzle {
+  gridSize: number;
+  words: CrosswordWord[];
+}
+
 export interface StorySegment {
   id: string;
   title: string;
